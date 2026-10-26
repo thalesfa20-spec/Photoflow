@@ -165,6 +165,11 @@ html{touch-action:manipulation}
   var P = new URLSearchParams(location.search);
   var TC = P.get('c') || '';
   var TG = P.get('g') || '';
+  var PAGO = null;   // voltou da InfinitePay depois de pagar
+  if (P.get('transaction_nsu') || P.get('receipt_url')) {
+    PAGO = { recibo: P.get('receipt_url') || '', metodo: P.get('capture_method') || '' };
+    try { history.replaceState({}, '', location.pathname + '?' + (TC ? 'c=' + encodeURIComponent(TC) + '&' : '') + 'g=' + encodeURIComponent(TG)); } catch (e) { }
+  }
 
   // ------------------------------------------------------------------ MODO NUVEM (Google Drive + Apps Script)
   // Se a página foi gerada pelo PhotoFlow para a nuvem, window.NUVEM_URL aponta para o script; senão tudo funciona como antes (servidor no PC).
@@ -425,6 +430,7 @@ html{touch-action:manipulation}
       ENV = new Set(d.selecionadasEnviadas || []); SEL = new Set(d.selecionadas || []); FAV = new Set(d.favoritas || []); COM = d.comentarios || {}; FILTRO = 'todas'; PASTA = ''; PMAP = {};
       if (d.pastas && d.pastas.length > 1 && d.fotoPasta) (d.fotos || []).forEach(function (n, i) { var k = d.fotoPasta[i]; if (k != null && d.pastas[k] != null) PMAP[n] = d.pastas[k]; });
       desenharGaleria();
+      pagoRetorno();
     }).catch(function () {
       erro('Não foi possível carregar', 'Verifique sua conexão e tente novamente.');
     });
@@ -794,7 +800,7 @@ html{touch-action:manipulation}
     if (!num) return '';
     if (num.length <= 11) num = '55' + num;
     var ex = extras();
-    var msg = (C.mensagemWhatsapp || 'Olá! Já fiz a seleção das fotos.') + '\n\n' + titulo() + '\nFotos selecionadas: ' + SEL.size + (ex ? '\nExtras: ' + ex + (C.precoExtra > 0 ? ' (' + brl(ex * C.precoExtra) + ')' : '') + (valorACobrar() > 0 ? '\nValor dos extras a pagar: ' + brl(valorACobrar()) : '') : '');
+    var msg = (C.mensagemWhatsapp || 'Olá! Já fiz a seleção das fotos.') + '\n\n' + titulo() + '\nFotos selecionadas: ' + SEL.size + (ex ? '\nExtras: ' + ex + (C.precoExtra > 0 ? ' (' + brl(ex * C.precoExtra) + ')' : '') + (valorACobrar() > 0 ? '\nValor dos extras a pagar: ' + brl(valorACobrar()) : '') : '') + (PAGO && PAGO.recibo ? '\nComprovante: ' + PAGO.recibo : '');
     return 'https://wa.me/' + num + '?text=' + encodeURIComponent(msg);
   }
 
@@ -837,6 +843,19 @@ html{touch-action:manipulation}
     var p = emv('00', '01') + emv('01', '11') + emv('26', conta) + emv('52', '0000') + emv('53', '986') + (valor > 0 ? emv('54', valor.toFixed(2)) : '') +
       emv('58', 'BR') + emv('59', pixTexto(nome, 25) || 'RECEBEDOR') + emv('60', pixTexto(cidade, 15) || 'BRASIL') + emv('62', emv('05', '***')) + '6304';
     return p + crc16(p);
+  }
+
+  // Depois de pagar, a InfinitePay devolve o cliente para a galeria (com ?receipt_url=...&transaction_nsu=...)
+  function urlRetorno() {
+    try { if (location.protocol !== 'https:') return ''; return location.origin + location.pathname + '?' + (TC ? 'c=' + encodeURIComponent(TC) + '&' : '') + 'g=' + encodeURIComponent(TG); } catch (e) { return ''; }
+  }
+  function pagoRetorno() {
+    if (!PAGO) return;
+    if (!D || C.finalizada) { PAGO = null; return; }
+    var v = valorACobrar();
+    abrirModal('<h3>Pagamento recebido ✓</h3><p>Obrigado! Agora é só enviar a sua seleção ao fotógrafo.</p><div class="sum"><div><span>Fotos selecionadas</span><b>' + SEL.size + '</b></div>' +
+      (v > 0 ? '<div><span>Extras pagas</span><b>' + brl(v) + '</b></div>' : '') + '</div>' +
+      '<div class="rowb"><button class="btn sec" data-a="mfechar">Depois</button><button class="btn" data-a="confirmar">Confirmar e enviar</button></div>');
   }
 
   var PG = { t: 0, fim: 0, valor: 0, modo: '', url: '', br: '', usado: '', expirou: false };
@@ -899,7 +918,7 @@ html{touch-action:manipulation}
       pgPintar(meu.br, '<button class="btn" data-a="copiabr">Copiar Pix copia e cola</button>');
     }
     if (modo === 'pix') { viaPix(); return; }
-    getJson('/api/galeria/pagamento' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: valor, descricao: titulo() }) })
+    getJson('/api/galeria/pagamento' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: valor, descricao: titulo(), retorno: urlRetorno() }) })
       .then(function (r) {
         if (meu !== PG) return;
         var u = String((r && r.url) || '');
