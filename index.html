@@ -33,7 +33,7 @@ h1{overflow-wrap:anywhere;margin:4px 0 0;font-size:30px;line-height:1.15;font-we
 .ph img{width:100%;height:100%;object-fit:cover;display:block}
 .ph.on{outline:3px solid var(--ac);outline-offset:-3px}
 .acts{position:absolute;right:10px;bottom:10px;display:flex;gap:8px}
-.rb{width:38px;height:38px;border-radius:50%;border:0;background:rgba(15,18,30,.62);color:#fff;display:grid;place-items:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.rb{width:38px;height:38px;border-radius:50%;border:0;background:rgba(15,18,30,.72);color:#fff;display:grid;place-items:center}
 @media (hover:hover){.rb:hover{background:rgba(15,18,30,.85)}}
 .rb.fav.on{background:#ef4444}.rb.fav.on svg{fill:#fff}
 .rb.sel.on{background:var(--ac)}
@@ -118,6 +118,39 @@ html{touch-action:manipulation}
 .toast{max-width:calc(100vw - 32px);text-align:center;bottom:calc(90px + env(safe-area-inset-bottom,0px))}
 @media (pointer:coarse){.rb{width:44px;height:44px}.acts{gap:6px}.bar .btn{min-height:46px}}
 /* ===== /PHOTOFLOW-FIX v2 ===== */
+/* ===== PHOTOFLOW-FIX v3 (extras, pagamento, celular) ===== */
+.grid{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+.ph{contain:layout paint;background:var(--card2)}
+.bar{box-shadow:0 -6px 20px rgba(0,0,0,.18)}
+.bar.ex{border-top-color:var(--warn)}
+.bar .inf .xt{display:block;font-size:14px;font-weight:700;color:var(--warn);margin-top:2px}
+.bar .inf .xt small{color:var(--mut);font-weight:500;font-size:12px}
+.bar .inf .xt b{font-size:16px;white-space:nowrap}
+.toast{bottom:calc(125px + env(safe-area-inset-bottom,0px))}
+.btn{min-height:44px;-webkit-user-select:none;user-select:none}
+.btn.busy{opacity:.7;pointer-events:none}
+.pill{min-height:40px}
+.pg{background:var(--card2);border:1px solid var(--ac);border-radius:14px;padding:14px;margin:12px 0}
+.pg .pgh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pg .pgh b{font-size:14px}
+.pg .pgt{font-variant-numeric:tabular-nums;font-weight:800;font-size:18px;color:var(--ok);background:rgba(52,211,153,.12);padding:4px 10px;border-radius:99px}
+.pg .pgt.low{color:var(--bad);background:rgba(248,113,113,.14)}
+.pg .pgv{font-size:28px;font-weight:800;text-align:center;margin:10px 0 4px}
+.pg .pgq{display:grid;place-items:center;min-height:200px;margin:6px 0}
+.pg .pgq svg{width:min(240px,70vw);height:auto;border-radius:12px;display:block;fill:none;stroke:none}   /* o svg{} geral da pagina tem traco (stroke) e estragaria o QR */
+.pg .pgq .ld{color:var(--mut);font-size:13.5px;text-align:center}
+.spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--bd);border-top-color:var(--ac);animation:giro .8s linear infinite;margin:0 auto 8px}
+@keyframes giro{to{transform:rotate(360deg)}}
+.pg .pga{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:8px 0 2px}
+.pg .pga .btn{padding:10px 14px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.pg .pgk{border-top:1px dashed var(--bd);margin-top:12px;padding-top:10px;font-size:13.5px}
+.pg .pgk code{display:block;word-break:break-all;font-size:15px;margin:6px 0 8px;color:var(--ac2)}
+.pg .pgk pre{white-space:pre-wrap;font:inherit;color:var(--mut);margin:8px 0 0}
+.pg .pgd{font-size:12.5px;color:var(--mut);text-align:center;margin-top:8px;line-height:1.45}
+.pg .pgx{text-align:center;color:var(--bad);font-size:14px;line-height:1.5}
+.md{--mp:22px}@media(max-width:700px){.md{--mp:18px}}
+.md .rowb.fix{position:sticky;bottom:calc(-1 * var(--mp));margin:16px calc(-1 * var(--mp)) calc(-1 * var(--mp));padding:12px var(--mp) calc(14px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--bd);z-index:2}
+/* ===== /PHOTOFLOW-FIX v3 ===== */
 </style>
 <script>window.NUVEM_URL="https://script.google.com/macros/s/AKfycbwaWUJcxdYlMDBZ9zGukvXmgb5VRBKCOpe-zkfVM2E4c4L6DKfV9oYOLS-6EmRC8Vaq/exec";</script>
 </head>
@@ -140,7 +173,7 @@ html{touch-action:manipulation}
   function nuvemFoto(nome, baixar, grande) {
     var id = (NV_IDS[TG] || {})[nome]; if (!id) return '';
     if (baixar) return 'https://drive.google.com/uc?export=download&id=' + id;
-    return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w' + (grande ? 2000 : 800);
+    return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w' + (grande ? 1600 : (window.innerWidth <= 700 ? 480 : 700));
   }
   function nuvemCapa(token) { var id = NV_CAPA[token]; return id ? 'https://drive.google.com/thumbnail?id=' + id + '&sz=w800' : ''; }
   if (NV) {
@@ -153,7 +186,8 @@ html{touch-action:manipulation}
       if (opts && opts.method === 'POST') {
         var corpo = {}; try { corpo = JSON.parse(opts.body || '{}'); } catch (e) { }
         corpo.action = acao; corpo.g = g;
-        req = fetchNativo(NV, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corpo) });
+        var corpoTxt = JSON.stringify(corpo);
+        req = fetchNativo(NV, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: corpoTxt, keepalive: !!(opts && opts.keepalive) && corpoTxt.length < 60000 });
       } else {
         req = fetchNativo(NV + (NV.indexOf('?') < 0 ? '?' : '&') + 'action=' + encodeURIComponent(acao) + (g ? '&g=' + encodeURIComponent(g) : '') + (c ? '&c=' + encodeURIComponent(c) : '') + '&_=' + Date.now());
       }
@@ -173,6 +207,113 @@ html{touch-action:manipulation}
       else if (fase === '1') { im.setAttribute('data-fb', '2'); setTimeout(function () { im.src = 'https://drive.google.com/thumbnail?id=' + id + '&sz=w' + sz + '&r=' + Date.now(); }, 2500); }
     }, true);
   }
+  // ---- Gerador de QR Code (byte, versões 1-10, correção L/M) - sem internet, sem biblioteca externa
+  var PFQR = (function () {
+    var ECC = { L: [7, 10, 15, 20, 26, 18, 20, 24, 30, 18], M: [10, 16, 26, 18, 24, 16, 18, 22, 22, 26] };
+    var BLK = { L: [1, 1, 1, 1, 1, 2, 2, 2, 2, 4], M: [1, 1, 1, 2, 2, 4, 4, 4, 5, 5] };
+    var FMT = { L: 1, M: 0 };
+    var EXP = [], LOG = [];
+    (function () { var x = 1; for (var i = 0; i < 255; i++) { EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 256) x ^= 0x11D; } for (i = 255; i < 512; i++) EXP[i] = EXP[i - 255]; })();
+    function gmul(a, b) { return (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]]; }
+    function rsGen(n) { var g = [1]; for (var i = 0; i < n; i++) { var ng = []; for (var j = 0; j <= g.length; j++) ng[j] = (j < g.length ? g[j] : 0) ^ (j > 0 ? gmul(g[j - 1], EXP[i]) : 0); g = ng; } return g; }
+    function rsEnc(data, n) {
+      var g = rsGen(n), r = []; for (var i = 0; i < n; i++) r[i] = 0;
+      data.forEach(function (b) { var f = b ^ r.shift(); r.push(0); for (var i = 0; i < n; i++) r[i] ^= gmul(g[i + 1], f); });
+      return r;
+    }
+    function rawModules(v) { var r = (16 * v + 128) * v + 64; if (v >= 2) { var na = Math.floor(v / 7) + 2; r -= (25 * na - 10) * na - 55; if (v >= 7) r -= 36; } return r; }
+    function dataCw(v, l) { return Math.floor(rawModules(v) / 8) - ECC[l][v - 1] * BLK[l][v - 1]; }
+    function utf8(s) { var u = unescape(encodeURIComponent(s)), a = []; for (var i = 0; i < u.length; i++) a.push(u.charCodeAt(i)); return a; }
+    function make(texto, nivel) {
+      var bytes = utf8(String(texto)), lvl = nivel === 'L' ? 'L' : 'M', ver = 0, l, k;
+      var tent = lvl === 'M' ? ['M', 'L'] : ['L'];
+      for (k = 0; k < tent.length && !ver; k++) {
+        for (var v = 1; v <= 10; v++) { var cap = dataCw(v, tent[k]) * 8, cc = v < 10 ? 8 : 16; if (4 + cc + bytes.length * 8 <= cap) { ver = v; l = tent[k]; break; } }
+      }
+      if (!ver) throw new Error('texto grande demais para o QR');
+      var bits = []; function put(val, n) { for (var i = n - 1; i >= 0; i--) bits.push((val >>> i) & 1); }
+      put(4, 4); put(bytes.length, ver < 10 ? 8 : 16); bytes.forEach(function (b) { put(b, 8); });
+      var capBits = dataCw(ver, l) * 8; put(0, Math.min(4, capBits - bits.length)); while (bits.length % 8) bits.push(0);
+      var data = []; for (var i = 0; i < bits.length; i += 8) { var b = 0; for (var j = 0; j < 8; j++) b = (b << 1) | bits[i + j]; data.push(b); }
+      for (var pad = 0xEC; data.length < dataCw(ver, l); pad ^= 0xEC ^ 0x11) data.push(pad);
+      // blocos + correção de erros + intercalar
+      var nb = BLK[l][ver - 1], ne = ECC[l][ver - 1], total = Math.floor(rawModules(ver) / 8), short = nb - total % nb, sl = Math.floor(total / nb) - ne;
+      var blocks = [], ecs = [], off = 0;
+      for (i = 0; i < nb; i++) { var len = sl + (i < short ? 0 : 1), d = data.slice(off, off + len); off += len; blocks.push(d); ecs.push(rsEnc(d, ne)); }
+      var cw = [];
+      for (i = 0; i <= sl; i++) blocks.forEach(function (d, bi) { if (i < d.length) cw.push(d[i]); });
+      for (i = 0; i < ne; i++) ecs.forEach(function (e) { cw.push(e[i]); });
+      var n = ver * 4 + 17, M = [], F = [];
+      for (i = 0; i < n; i++) { M.push(new Array(n).fill(false)); F.push(new Array(n).fill(false)); }
+      function setF(x, y, dark) { if (x >= 0 && x < n && y >= 0 && y < n) { M[y][x] = dark; F[y][x] = true; } }
+      for (i = 0; i < n; i++) { setF(6, i, i % 2 === 0); setF(i, 6, i % 2 === 0); }
+      function finder(cx, cy) { for (var dy = -4; dy <= 4; dy++) for (var dx = -4; dx <= 4; dx++) { var dist = Math.max(Math.abs(dx), Math.abs(dy)); setF(cx + dx, cy + dy, dist !== 2 && dist !== 4); } }
+      finder(3, 3); finder(n - 4, 3); finder(3, n - 4);
+      var na = ver === 1 ? 0 : Math.floor(ver / 7) + 2, pos = [];
+      if (na) { var step = ver === 32 ? 26 : Math.ceil((ver * 4 + 4) / (na * 2 - 2)) * 2; pos = [6]; for (var p = n - 7; pos.length < na; p -= step) pos.splice(1, 0, p); }
+      for (i = 0; i < na; i++) for (j = 0; j < na; j++) {
+        if ((i === 0 && j === 0) || (i === 0 && j === na - 1) || (i === na - 1 && j === 0)) continue;
+        for (var dy2 = -2; dy2 <= 2; dy2++) for (var dx2 = -2; dx2 <= 2; dx2++) setF(pos[i] + dx2, pos[j] + dy2, Math.max(Math.abs(dx2), Math.abs(dy2)) !== 1);
+      }
+      function fmtBits(mask) {
+        var d = (FMT[l] << 3) | mask, r = d; for (var q = 0; q < 10; q++) r = (r << 1) ^ ((r >>> 9) * 0x537);
+        var bt = ((d << 10) | r) ^ 0x5412;
+        function g(q) { return ((bt >>> q) & 1) !== 0; }
+        for (q = 0; q <= 5; q++) setF(8, q, g(q)); setF(8, 7, g(6)); setF(8, 8, g(7)); setF(7, 8, g(8)); for (q = 9; q < 15; q++) setF(14 - q, 8, g(q));
+        for (q = 0; q < 8; q++) setF(n - 1 - q, 8, g(q)); for (q = 8; q < 15; q++) setF(8, n - 15 + q, g(q)); setF(8, n - 8, true);
+      }
+      fmtBits(0);
+      if (ver >= 7) {
+        var r2 = ver; for (i = 0; i < 12; i++) r2 = (r2 << 1) ^ ((r2 >>> 11) * 0x1F25);
+        var vb = (ver << 12) | r2;
+        for (i = 0; i < 18; i++) { var bt2 = ((vb >>> i) & 1) !== 0, a = n - 11 + i % 3, b2 = Math.floor(i / 3); setF(a, b2, bt2); setF(b2, a, bt2); }
+      }
+      // posiciona os bits em zigue-zague
+      var bi = 0, totalBits = cw.length * 8;
+      for (var right = n - 1; right >= 1; right -= 2) {
+        if (right === 6) right = 5;
+        for (var vert = 0; vert < n; vert++) for (j = 0; j < 2; j++) {
+          var x = right - j, up = ((right + 1) & 2) === 0, y = up ? n - 1 - vert : vert;
+          if (!F[y][x] && bi < totalBits) { M[y][x] = ((cw[bi >>> 3] >>> (7 - (bi & 7))) & 1) !== 0; bi++; }
+        }
+      }
+      function aplicar(mask) {
+        for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) {
+          if (F[y][x]) continue;
+          var inv; switch (mask) {
+            case 0: inv = (x + y) % 2 === 0; break; case 1: inv = y % 2 === 0; break; case 2: inv = x % 3 === 0; break; case 3: inv = (x + y) % 3 === 0; break;
+            case 4: inv = (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0; break; case 5: inv = x * y % 2 + x * y % 3 === 0; break;
+            case 6: inv = (x * y % 2 + x * y % 3) % 2 === 0; break; default: inv = ((x + y) % 2 + x * y % 3) % 2 === 0;
+          }
+          if (inv) M[y][x] = !M[y][x];
+        }
+      }
+      function penal() {
+        var s = 0, y, x, run, c;
+        for (var t = 0; t < 2; t++) for (y = 0; y < n; y++) {
+          run = 1; for (x = 1; x < n; x++) { var a1 = t ? M[x][y] : M[y][x], b1 = t ? M[x - 1][y] : M[y][x - 1]; if (a1 === b1) { run++; if (run === 5) s += 3; else if (run > 5) s++; } else run = 1; }
+          for (x = 0; x + 10 < n; x++) {
+            var w = ''; for (c = 0; c < 11; c++) w += (t ? M[x + c][y] : M[y][x + c]) ? '1' : '0';
+            if (w === '10111010000' || w === '00001011101') s += 40;
+          }
+        }
+        for (y = 0; y < n - 1; y++) for (x = 0; x < n - 1; x++) { c = M[y][x]; if (c === M[y][x + 1] && c === M[y + 1][x] && c === M[y + 1][x + 1]) s += 3; }
+        var dk = 0; for (y = 0; y < n; y++) for (x = 0; x < n; x++) if (M[y][x]) dk++;
+        s += Math.floor(Math.abs(dk * 20 - n * n * 10) / (n * n)) * 10;
+        return s;
+      }
+      var melhor = 0, menor = 1e9;
+      for (var m = 0; m < 8; m++) { aplicar(m); fmtBits(m); var pn = penal(); if (pn < menor) { menor = pn; melhor = m; } aplicar(m); }
+      aplicar(melhor); fmtBits(melhor);
+      return { n: n, v: ver, l: l, escuro: function (x, y) { return M[y][x]; } };
+    }
+    function svg(texto, nivel) {
+      var q = make(texto, nivel), d = '';
+      for (var y = 0; y < q.n; y++) { var x = 0; while (x < q.n) { if (q.escuro(x, y)) { var s = x; while (x < q.n && q.escuro(x, y)) x++; d += 'M' + s + ' ' + y + 'h' + (x - s) + 'v1h-' + (x - s) + 'z'; } else x++; } }
+      return '<svg viewBox="-4 -4 ' + (q.n + 8) + ' ' + (q.n + 8) + '" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="QR Code"><rect x="-4" y="-4" width="' + (q.n + 8) + '" height="' + (q.n + 8) + '" fill="#fff" stroke="none"/><path d="' + d + '" fill="#000" stroke="none"/></svg>';
+    }
+    return { make: make, svg: svg };
+  })();
   var app = document.getElementById('app');
   var lb = document.getElementById('lb');
   var mo = document.getElementById('mo');
@@ -198,15 +339,17 @@ html{touch-action:manipulation}
   function toast(t) { var el = document.getElementById('toast'); el.textContent = t; el.className = 'toast on'; clearTimeout(toast._t); toast._t = setTimeout(function () { el.className = 'toast'; }, 2600); }
   function getJson(url, opts) { return fetch(url, opts).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); }
   function qg() { return TG ? '?g=' + encodeURIComponent(TG) : ''; }
-  function fotoUrl(nome, baixar, grande) { if (NV) return nuvemFoto(nome, baixar, grande); return '/api/galeria/foto?' + (TG ? 'g=' + encodeURIComponent(TG) + '&' : '') + (baixar ? 'baixar=1&' : '') + 'arquivo=' + encodeURIComponent(nome); }
+  function fotoUrl(nome, baixar, grande) { if (NV) return nuvemFoto(nome, baixar, grande); return '/api/galeria/foto?' + (TG ? 'g=' + encodeURIComponent(TG) + '&' : '') + (baixar ? 'baixar=1&' : (grande ? 'grande=1&' : '')) + 'arquivo=' + encodeURIComponent(nome); }
   function fotoUrlDe(token, nome) { if (NV) return nuvemCapa(token); return '/api/galeria/foto?g=' + encodeURIComponent(token) + '&arquivo=' + encodeURIComponent(nome); }
 
   // tema claro/escuro
-  try { var tm = localStorage.getItem('pf_tema'); if (tm) document.documentElement.setAttribute('data-theme', tm); } catch (e) { }
+  try { var tm = localStorage.getItem('pf_tema'); if (tm) { document.documentElement.setAttribute('data-theme', tm); corMeta(tm); } } catch (e) { }
+  function corMeta(t) { try { var mt = document.querySelector('meta[name=theme-color]'); if (mt) mt.setAttribute('content', t === 'dark' ? '#0b0f1a' : '#f4f5f9'); } catch (e) { } }
   function trocarTema() {
     var novo = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', novo);
     try { localStorage.setItem('pf_tema', novo); } catch (e) { }
+    corMeta(novo);
   }
   function btnTema() { return '<button class="ibtn" data-a="tema" title="Tema">' + IC.sun + '</button>'; }
 
@@ -310,7 +453,18 @@ html{touch-action:manipulation}
     return h;
   }
   function novasSel() { var n = 0; SEL.forEach(function (x) { if (!ENV.has(x)) n++; }); return n; }
-  function extras() { var inc = Number(C.incluida) || 0; return inc > 0 ? Math.max(SEL.size - inc, 0) : 0; }
+  // ---- extras: soma automática (fotos acima do pacote x valor da foto extra)
+  function incl() { return Number(C.incluida) || 0; }
+  function preco() { return Number(C.precoExtra) || 0; }
+  function extras() { var inc = incl(); return inc > 0 ? Math.max(SEL.size - inc, 0) : 0; }
+  // seleção liberada de novo: as extras que já tinham sido enviadas antes não são cobradas outra vez
+  function extrasJaEnviadas() { var inc = incl(); return (C.reaberta && inc > 0) ? Math.max(ENV.size - inc, 0) : 0; }
+  function extrasACobrar() { return Math.max(extras() - extrasJaEnviadas(), 0); }
+  function valorACobrar() { return Math.round(extrasACobrar() * preco() * 100) / 100; }
+  function avisoExtra() {
+    var inc = incl();
+    if (inc > 0 && SEL.size === inc + 1 && !C.finalizada) toast('Você passou das ' + inc + ' fotos do pacote.' + (preco() > 0 ? ' Cada foto extra custa ' + brl(preco()) + '.' : ''));
+  }
   function entrega() { return D.tipoGaleria === 'entrega'; }
 
   function cabecalho() {
@@ -340,16 +494,20 @@ html{touch-action:manipulation}
 
   function barra() {
     if (entrega() || C.permitirSelecao === false) return '';
-    var inc = Number(C.incluida) || 0, ex = extras();
+    var inc = incl(), ex = extras(), pr = preco(), reab = C.reaberta && !C.finalizada;
     var l1 = inc > 0 ? SEL.size + ' de ' + inc + ' incluídas' : SEL.size + ' selecionada(s)';
-    var nv = C.reaberta && !C.finalizada ? novasSel() : 0;
-    var l2 = ex > 0 ? '+' + ex + ' extra(s)' + (C.precoExtra > 0 ? ' · ' + brl(ex * C.precoExtra) : '') : 'Nenhuma foto extra';
-    if (C.reaberta && !C.finalizada) l2 += ' · ' + nv + ' nova(s) desde o envio';
-    return '<div class="bar" id="bar"><div class="wrap"><div class="inf"><b>' + l1 + '</b><small>' + l2 + '</small></div>' +
+    var l2 = '', xt = '';
+    if (ex > 0) {
+      var ja = extrasJaEnviadas();
+      if (reab && ja > 0) xt = '<span class="xt">+' + ex + ' extra(s)' + (pr > 0 ? ' · a pagar agora: <b>' + brl(valorACobrar()) + '</b>' : '') + '<small> (' + ja + ' já enviada(s))</small></span>';
+      else xt = '<span class="xt">+' + ex + ' extra' + (ex > 1 ? 's' : '') + (pr > 0 ? ' × ' + brl(pr) + ' = <b>' + brl(ex * pr) + '</b>' : '') + '</span>';
+    } else l2 = 'Nenhuma foto extra';
+    if (reab) l2 += (l2 ? ' · ' : '') + novasSel() + ' nova(s) desde o envio';
+    return '<div class="bar' + (ex > 0 && pr > 0 ? ' ex' : '') + '" id="bar"><div class="wrap"><div class="inf"><b>' + l1 + '</b>' + xt + (l2 ? '<small>' + l2 + '</small>' : '') + '</div>' +
       '<button class="btn" data-a="finalizar"' + (!SEL.size || C.finalizada ? ' disabled' : '') + '>' + (C.finalizada ? 'Seleção enviada' : (C.reaberta ? 'Reenviar seleção' : 'Finalizar seleção')) + '</button></div></div>';
   }
 
-  function cartao(n, i) {
+    function cartao(n, i) {
     var b = '';
     if (C.permitirComentarios !== false) b += '<button class="rb com' + (temCom(n) ? ' on' : '') + '" data-a="com" data-n="' + esc(n) + '" title="Comentar">' + IC.msg + '</button>';
     if (C.permitirFavoritas !== false) b += '<button class="rb fav' + (FAV.has(n) ? ' on' : '') + '" data-a="fav" data-n="' + esc(n) + '" title="Favoritar">' + IC.heart + '</button>';
@@ -389,18 +547,34 @@ html{touch-action:manipulation}
     var c = el.querySelector('.com'); if (c) c.classList.toggle('on', temCom(n));
   }
 
-  function salvar() {
-    clearTimeout(tSave);
-    tSave = setTimeout(function () {
-      fetch('/api/galeria/salvar-progresso' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ selecionadas: Array.from(SEL), favoritas: Array.from(FAV) }) })
-        .then(function (r) { if (!r.ok) throw new Error(); }).catch(function () { toast('Não consegui salvar agora. Confira sua conexão.'); });
-    }, 350);
+  // Grava a seleção em fila: uma por vez (a seguinte leva sempre o estado mais novo, então nada fica fora de ordem)
+  var salvandoProg = false, salvarPend = false, salvarFalhou = false, salvarTent = 0;
+  function salvar() { clearTimeout(tSave); salvarPend = true; salvarTent = 0; tSave = setTimeout(function () { enviarProgresso(false); }, 350); }
+  function enviarProgresso(flush) {
+    if (salvandoProg || !salvarPend) return;
+    salvarPend = false; salvandoProg = true;
+    var corpo = JSON.stringify({ selecionadas: Array.from(SEL), favoritas: Array.from(FAV) });
+    fetch('/api/galeria/salvar-progresso' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: corpo, keepalive: !!flush && corpo.length < 60000 })
+      .then(function (r) { if (!r.ok) throw new Error(); salvarFalhou = false; salvarTent = 0; })
+      .catch(function () {
+        salvarPend = true; salvarTent++;
+        if (!salvarFalhou) toast('Não consegui salvar agora. Vou tentar de novo.');
+        salvarFalhou = true; clearTimeout(tSave);
+        if (salvarTent < 8) tSave = setTimeout(function () { salvarFalhou = false; enviarProgresso(false); }, 5000);
+      })
+      .then(function () {
+        salvandoProg = false;
+        if (salvarPend && !salvarFalhou) { clearTimeout(tSave); tSave = setTimeout(function () { enviarProgresso(false); }, 150); }
+      });
   }
+  function descarregarProgresso() { if (salvarPend) { clearTimeout(tSave); enviarProgresso(true); } }   // ao sair da página / trocar de app
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') descarregarProgresso(); });
+  window.addEventListener('pagehide', descarregarProgresso);
 
-  function alternar(n, tipo) {
+    function alternar(n, tipo) {
     if (tipo === 'sel') {
       if (C.finalizada) { toast('Sua seleção já foi enviada.'); return; }
-      if (SEL.has(n)) SEL.delete(n); else SEL.add(n);
+      if (SEL.has(n)) SEL.delete(n); else { SEL.add(n); avisoExtra(); }
     } else {
       if (FAV.has(n)) FAV.delete(n); else FAV.add(n);
     }
@@ -470,6 +644,14 @@ html{touch-action:manipulation}
     lbNome = n; G.s = 1; G.x = 0; G.y = 0; T = null; houveMulti = false;
     lb.innerHTML = '<div class="st"><div class="ct">' + ctTexto(n) + '</div><button class="rb cl" data-a="lbfechar">' + IC.x + '</button>' +
       '<button class="nv l" data-a="lbant">' + IC.l + '</button><img draggable="false" src="' + fotoUrl(n, false, true) + '" alt="' + esc(n) + '"><button class="nv r" data-a="lbprox">' + IC.r + '</button></div><div class="ft">' + botoesLb(n) + '</div>';
+    setTimeout(function () { precarregar(LBI + 1); precarregar(LBI - 1); }, 400);   // a próxima foto já fica pronta
+  }
+  function precarregar(i) {
+    try {
+      if (!LISTA.length || (navigator.connection && navigator.connection.saveData)) return;
+      var n = LISTA[(i + LISTA.length) % LISTA.length]; if (!n || n === lbNome) return;
+      var im = new Image(); im.decoding = 'async'; im.src = fotoUrl(n, false, true);
+    } catch (e) { }
   }
   function lbMover(d) { if (!LISTA.length) return; LBI = (LBI + d + LISTA.length) % LISTA.length; atualizarLightbox(); }
 
@@ -567,63 +749,214 @@ html{touch-action:manipulation}
       '<div class="rowb"><button class="btn sec" data-a="mfechar">Fechar</button><button class="btn" data-a="enviarcom" data-n="' + esc(n) + '">Enviar</button></div>');
     var t = document.getElementById('ctxt'); if (t) { t.focus(); setTimeout(function () { try { t.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { } }, 350); }
   }
+  var comEnvio = {};
   function enviarComentario(n) {
     var t = document.getElementById('ctxt'), txt = t ? t.value.trim() : '';
     if (!txt) { toast('Escreva o comentário primeiro.'); return; }
+    var chaveEnvio = n + '|' + txt;
+    if (comEnvio[chaveEnvio]) return;   // toque duplo: não envia duas vezes
+    comEnvio[chaveEnvio] = true;
+    // aparece na hora; o envio acontece por trás (no Google pode levar alguns segundos)
+    var d = new Date(), z = function (x) { return (x < 10 ? '0' : '') + x; };
+    var entrada = d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes()) + '|' + txt;
+    if (!COM[n]) COM[n] = [];
+    COM[n].push(entrada);
+    fecharModal(); pintarCartao(n); atualizarChrome(); atualizarLightbox(); toast('Comentário enviado ✓');
     getJson('/api/galeria/comentar' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ foto: n, texto: txt }) })
-      .then(function (r) { COM = r.comentarios || COM; fecharModal(); pintarCartao(n); atualizarChrome(); atualizarLightbox(); toast('Comentário enviado.'); })
-      .catch(function () { toast('Não foi possível enviar o comentário.'); });
+      .catch(function () {
+        // não foi: tira da tela e devolve o texto para a pessoa tentar de novo
+        var i = (COM[n] || []).indexOf(entrada); if (i >= 0) COM[n].splice(i, 1);
+        if (COM[n] && !COM[n].length) delete COM[n];
+        pintarCartao(n); atualizarChrome(); atualizarLightbox();
+        modalComentario(n); var t2 = document.getElementById('ctxt'); if (t2) t2.value = txt;
+        toast('Não consegui enviar. Toque em Enviar para tentar de novo.');
+      })
+      .then(function () { delete comEnvio[chaveEnvio]; });
   }
 
-  function copiarTexto(txt) {
+  function copiarTexto(txt, msg) {
+    msg = msg || 'Copiado.';
     function fallback() {
       try {
         var ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly', '');
         ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px';
         document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, txt.length);
         var ok = document.execCommand('copy'); document.body.removeChild(ta);
-        toast(ok ? 'Chave Pix copiada.' : 'Copie a chave manualmente.');
-      } catch (x) { toast('Copie a chave manualmente.'); }
+        toast(ok ? msg : 'Copie manualmente.');
+      } catch (x) { toast('Copie manualmente.'); }
     }
-    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(function () { toast('Chave Pix copiada.'); }, fallback);
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(function () { toast(msg); }, fallback);
     else fallback();
   }
 
-  function waLink() {
+    function waLink() {
     var num = String(C.whatsapp || '').replace(/\D/g, '');
     if (!num) return '';
     if (num.length <= 11) num = '55' + num;
     var ex = extras();
-    var msg = (C.mensagemWhatsapp || 'Olá! Já fiz a seleção das fotos.') + '\n\n' + titulo() + '\nFotos selecionadas: ' + SEL.size + (ex ? '\nExtras: ' + ex + (C.precoExtra > 0 ? ' (' + brl(ex * C.precoExtra) + ')' : '') : '');
+    var msg = (C.mensagemWhatsapp || 'Olá! Já fiz a seleção das fotos.') + '\n\n' + titulo() + '\nFotos selecionadas: ' + SEL.size + (ex ? '\nExtras: ' + ex + (C.precoExtra > 0 ? ' (' + brl(ex * C.precoExtra) + ')' : '') + (valorACobrar() > 0 ? '\nValor dos extras a pagar: ' + brl(valorACobrar()) : '') : '');
     return 'https://wa.me/' + num + '?text=' + encodeURIComponent(msg);
   }
 
+  // ---------------------------------------------------------------- pagamento das fotos extras (QR Code + contador)
+  function pixTexto(s, max) {
+    s = String(s || ''); try { s = s.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch (e) { }
+    return s.replace(/[^A-Za-z0-9 .\-]/g, '').replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '').toUpperCase().slice(0, max);
+  }
+  function cpfOk(d) {
+    if (d.length !== 11 || /^(\d)\1+$/.test(d)) return false;
+    for (var t = 9; t < 11; t++) { var s = 0; for (var i = 0; i < t; i++) s += Number(d.charAt(i)) * (t + 1 - i); if (((s * 10) % 11) % 10 !== Number(d.charAt(t))) return false; }
+    return true;
+  }
+  // formato da chave dentro do QR Code Pix: CPF/CNPJ só números, celular +55..., e-mail e aleatória em minúsculas
+  function pixChaveEmv(chave, tipo) {
+    var c = String(chave || '').replace(/^\s+|\s+$/g, ''), d = c.replace(/\D/g, ''); tipo = String(tipo || 'auto');
+    if (tipo === 'auto') {
+      if (c.indexOf('@') > 0) tipo = 'email';
+      else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(c)) tipo = 'evp';
+      else if (c.charAt(0) === '+') tipo = 'tel';
+      else if (d.length === 14) tipo = 'cnpj';
+      else if (d.length === 11) tipo = (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(c) || cpfOk(d)) ? 'cpf' : 'tel';
+      else if (d.length >= 10 && d.length <= 13) tipo = 'tel';
+      else tipo = 'evp';
+    }
+    if (tipo === 'email' || tipo === 'evp') return c.toLowerCase();
+    if (tipo === 'cpf' || tipo === 'cnpj') return d;
+    if (tipo === 'tel') return (c.charAt(0) === '+' || d.length >= 12) ? '+' + d : '+55' + d;
+    return c;
+  }
+  function emv(id, v) { v = String(v); return id + (v.length < 10 ? '0' : '') + v.length + v; }
+  function crc16(s) {
+    var crc = 0xFFFF;
+    for (var i = 0; i < s.length; i++) { crc ^= s.charCodeAt(i) << 8; for (var j = 0; j < 8; j++) crc = (crc & 0x8000) ? (((crc << 1) ^ 0x1021) & 0xFFFF) : ((crc << 1) & 0xFFFF); }
+    return ('000' + crc.toString(16).toUpperCase()).slice(-4);
+  }
+  // "Pix copia e cola" com valor (padrão do Banco Central) - qualquer banco lê
+  function pixBrCode(chave, tipo, valor, nome, cidade) {
+    var conta = emv('00', 'br.gov.bcb.pix') + emv('01', pixChaveEmv(chave, tipo));
+    var p = emv('00', '01') + emv('01', '11') + emv('26', conta) + emv('52', '0000') + emv('53', '986') + (valor > 0 ? emv('54', valor.toFixed(2)) : '') +
+      emv('58', 'BR') + emv('59', pixTexto(nome, 25) || 'RECEBEDOR') + emv('60', pixTexto(cidade, 15) || 'BRASIL') + emv('62', emv('05', '***')) + '6304';
+    return p + crc16(p);
+  }
+
+  var PG = { t: 0, fim: 0, valor: 0, modo: '', url: '', br: '', usado: '', expirou: false };
+  function pgModo() {
+    var m = String(C.pagamentoModo || 'auto').toLowerCase(), ip = !!String(C.infinitePay || '').replace(/\s/g, ''), px = !!String(C.pixChave || '').replace(/\s/g, '');
+    if (m === 'chave') return 'chave';
+    if (m === 'infinitepay' && ip) return 'infinitepay';
+    if (m === 'pix' && px) return 'pix';
+    return ip ? 'infinitepay' : (px ? 'pix' : 'chave');
+  }
+  function pgMin() { var m = Number(C.pagamentoMinutos); return (m >= 1 && m <= 60) ? Math.floor(m) : 10; }
+  function mmss(ms) { var s = Math.max(0, Math.ceil(ms / 1000)), m = Math.floor(s / 60); s = s % 60; return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
+  function pgParar() { clearInterval(PG.t); PG.t = 0; }
+  function pgTem() { return pgModo() !== 'chave' || !!(C.pixChave || C.pixInfo || C.pixQr); }
+
+  function pgHtml(valor) {
+    var modo = pgModo(), h = '<div class="pg" id="pg"><div class="pgh"><b>Pagamento das fotos extras</b>' +
+      (modo !== 'chave' ? '<span class="pgt" id="pgt">' + mmss(pgMin() * 60000) + '</span>' : '') + '</div><div class="pgv">' + brl(valor) + '</div>';
+    if (modo !== 'chave') {
+      h += '<div class="pgq" id="pgq"><div class="ld"><div class="spin"></div>Gerando QR Code…</div></div><div class="pga" id="pga"></div>' +
+        '<div class="pgd">Abra o app do seu banco, escolha pagar com QR Code e aponte a câmera. No celular, use o botão acima. Depois de pagar, toque em <b>Confirmar e enviar</b>.</div>';
+    } else if (C.pixQr) {
+      h += '<div class="pgq"><img src="/api/pix-qr?v=' + Date.now() + '" alt="QR Code Pix" style="width:190px;max-width:70vw;background:#fff;padding:6px;border-radius:10px"></div>';
+    }
+    if (C.pixChave) h += '<div class="pgk"><b>Chave Pix</b><code>' + esc(C.pixChave) + '</code><button class="btn sec" data-a="copiapix" style="padding:8px 14px">Copiar chave</button>' + (C.pixInfo ? '<pre>' + esc(C.pixInfo) + '</pre>' : '') + '</div>';
+    else if (C.pixInfo) h += '<div class="pgk"><pre>' + esc(C.pixInfo) + '</pre></div>';
+    return h + '</div>';
+  }
+
+  function pgTick() {
+    if (!document.getElementById('pg')) { pgParar(); return; }
+    var el = document.getElementById('pgt'), resta = PG.fim - Date.now();
+    if (resta <= 0) {
+      pgParar(); PG.expirou = true;
+      if (el) { el.textContent = '00:00'; el.className = 'pgt low'; }
+      var q = document.getElementById('pgq'), a = document.getElementById('pga');
+      if (q) q.innerHTML = '<div class="pgx"><b>Tempo esgotado</b><br>O QR Code expirou. Gere um novo para pagar.</div>';
+      if (a) a.innerHTML = '<button class="btn" data-a="pgnovo">Gerar novo QR Code</button>';
+      return;
+    }
+    if (el) { el.textContent = mmss(resta); el.className = 'pgt' + (resta < 60000 ? ' low' : ''); }
+  }
+  function pgPintar(txt, acoes) {
+    var q = document.getElementById('pgq'), a = document.getElementById('pga');
+    if (!q || PG.expirou || Date.now() >= PG.fim) return;
+    try { q.innerHTML = PFQR.svg(txt, 'M'); } catch (e) { q.innerHTML = '<div class="pgx">Não consegui desenhar o QR Code. Use a chave Pix abaixo.</div>'; }
+    // tamanho em múltiplo exato dos quadradinhos: o QR fica nítido e a câmera lê mais rápido
+    try { var sv = q.querySelector('svg'), mod = sv.viewBox.baseVal.width, mx = Math.min(240, Math.floor(window.innerWidth * 0.7)); sv.style.width = Math.max(mod * 3, Math.floor(mx / mod) * mod) + 'px'; } catch (e) { }
+    if (a) a.innerHTML = acoes;
+  }
+  function pgErro(msg) { var q = document.getElementById('pgq'); if (q) q.innerHTML = '<div class="pgx">' + esc(msg) + '</div>'; var a = document.getElementById('pga'); if (a) a.innerHTML = ''; }
+
+  function pgGerar(valor, modo) {
+    var meu = PG;
+    function viaPix() {
+      if (meu !== PG) return;
+      if (!String(C.pixChave || '').replace(/\s/g, '')) { pgErro('Não consegui gerar o QR Code agora. Fale com o fotógrafo para combinar o pagamento.'); return; }
+      try { meu.br = pixBrCode(C.pixChave, C.pixTipo, valor, C.pixNome, C.pixCidade); meu.usado = 'pix'; }
+      catch (e) { pgErro('Não consegui gerar o QR Code. Use a chave Pix abaixo.'); return; }
+      pgPintar(meu.br, '<button class="btn" data-a="copiabr">Copiar Pix copia e cola</button>');
+    }
+    if (modo === 'pix') { viaPix(); return; }
+    getJson('/api/galeria/pagamento' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: valor, descricao: titulo() }) })
+      .then(function (r) {
+        if (meu !== PG) return;
+        var u = String((r && r.url) || '');
+        if (!/^https:\/\/([a-z0-9-]+\.)*infinitepay\.io\//i.test(u)) throw new Error('link');
+        meu.url = u; meu.usado = 'infinitepay';
+        pgPintar(u, '<a class="btn" target="_blank" rel="noopener" href="' + esc(u) + '">Abrir pagamento</a>');
+      })
+      .catch(function () { viaPix(); });   // InfinitePay indisponível: cai para o QR do Pix
+  }
+
+  function pgIniciar(novo) {
+    pgParar();
+    var modo = pgModo(); if (modo === 'chave') return;
+    var valor = valorACobrar(), sessao = 'pf_pg_' + (TG || TC || 'x') + '_' + valor.toFixed(2), fim = 0;
+    if (!novo) { try { fim = Number(sessionStorage.getItem(sessao)) || 0; } catch (e) { } }   // reabrir o resumo não reinicia o contador
+    if (!fim) { fim = Date.now() + pgMin() * 60000; try { sessionStorage.setItem(sessao, String(fim)); } catch (e) { } }
+    PG = { t: 0, fim: fim, valor: valor, modo: modo, url: '', br: '', usado: '', expirou: false };
+    var q = document.getElementById('pgq'); if (q) q.innerHTML = '<div class="ld"><div class="spin"></div>Gerando QR Code…</div>';
+    var a = document.getElementById('pga'); if (a) a.innerHTML = '';
+    PG.t = setInterval(pgTick, 1000); pgTick();
+    if (!PG.expirou) pgGerar(valor, modo);
+  }
+
   function modalFinalizar() {
-    var ex = extras(), tot = ex * (Number(C.precoExtra) || 0), inc = Number(C.incluida) || 0;
+    var ex = extras(), pr = preco(), inc = incl(), cobrar = valorACobrar(), ja = extrasJaEnviadas();
     var h = '<h3>Finalizar seleção</h3><p>Confira o resumo antes de enviar ao fotógrafo.</p><div class="sum">' +
       '<div><span>Fotos selecionadas</span><b>' + SEL.size + '</b></div>' + (C.reaberta ? '<div><span>Já enviadas antes</span><b>' + ENV.size + '</b></div><div><span>Novas nesta rodada</span><b>' + novasSel() + '</b></div>' : '') + (inc ? '<div><span>Incluídas no pacote</span><b>' + inc + '</b></div>' : '') +
-      (ex ? '<div><span>Fotos extras</span><b>' + ex + '</b></div>' : '') +
-      (tot > 0 ? '<div class="tot"><span>Total a pagar</span><span>' + brl(tot) + '</span></div>' : '') + '</div>';
-    if (tot > 0 && (C.pixChave || C.pixInfo || C.pixQr)) {
-      h += '<div class="pix"><b>Pagamento via Pix</b>' + (C.pixChave ? '<code>' + esc(C.pixChave) + '</code><button class="btn sec" data-a="copiapix" style="padding:8px 14px">Copiar chave</button>' : '') +
-        (C.pixInfo ? '<pre>' + esc(C.pixInfo) + '</pre>' : '') + (C.pixQr ? '<img src="/api/pix-qr?v=' + Date.now() + '" alt="QR Code Pix">' : '') + '</div>';
-    }
-    h += '<div class="rowb"><button class="btn sec" data-a="mfechar">Voltar</button><button class="btn" data-a="confirmar">Confirmar e enviar</button></div>';
+      (ex ? '<div><span>Fotos extras' + (pr > 0 ? ' (' + brl(pr) + ' cada)' : '') + '</span><b>' + ex + '</b></div>' : '') +
+      (ja ? '<div><span>Extras já cobradas antes</span><b>' + ja + '</b></div>' : '') +
+      (cobrar > 0 ? '<div class="tot"><span>Total a pagar</span><span>' + brl(cobrar) + '</span></div>' : '') + '</div>';
+    var mostrar = cobrar > 0 && pgTem();
+    if (mostrar) h += pgHtml(cobrar);
+    h += '<div class="rowb fix"><button class="btn sec" data-a="mfechar">Voltar</button><button class="btn" data-a="confirmar">Confirmar e enviar</button></div>';
     abrirModal(h);
+    if (mostrar && pgModo() !== 'chave') pgIniciar(false);
   }
+
+  var finalizando = false;
   function confirmarFinalizacao() {
+    if (finalizando) return; finalizando = true;
+    var bt = mo.querySelector('[data-a="confirmar"]'), tx = bt ? bt.textContent : '';
+    if (bt) { bt.textContent = 'Enviando…'; bt.classList.add('busy'); }
+    var wa = waLink();   // antes de atualizar o que já foi enviado, para o recado levar o valor certo
     getJson('/api/galeria/finalizar' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ selecionadas: Array.from(SEL) }) })
       .then(function () {
+        pgParar();
         C.finalizada = true; C.finalizadaEm = new Date().toLocaleString('pt-BR');
         if (C.reaberta) ENV = new Set(Array.from(SEL));
-        var wa = waLink();
         abrirModal('<h3>Seleção enviada! ✓</h3><p>Suas ' + SEL.size + ' fotos foram enviadas para o fotógrafo.' + (wa ? ' Avise pelo WhatsApp para agilizar.' : '') + '</p>' +
           '<div class="rowb"><button class="btn sec" data-a="mfechar">Fechar</button>' + (wa ? '<a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="' + wa + '">Avisar pelo WhatsApp</a>' : '') + '</div>');
         desenharGaleria();
-      }).catch(function () { toast('Não foi possível enviar. Tente novamente.'); });
+      })
+      .catch(function () { toast('Não foi possível enviar. Tente novamente.'); if (bt) { bt.textContent = tx; bt.classList.remove('busy'); } })
+      .then(function () { finalizando = false; });
   }
 
-  // ------------------------------------------------------------------ eventos
+    // ------------------------------------------------------------------ eventos
   document.addEventListener('click', function (e) {
     var el = e.target.closest('[data-a]'); if (!el) return;
     var a = el.getAttribute('data-a'), n = el.getAttribute('data-n');
@@ -638,7 +971,9 @@ html{touch-action:manipulation}
     else if (a === 'pasta') { var kp = el.getAttribute('data-k'); PASTA = kp === '' ? '' : (D.pastas[Number(kp)] || ''); atualizarChrome(); redesenharGrade(); }
     else if (a === 'finalizar') modalFinalizar();
     else if (a === 'confirmar') confirmarFinalizacao();
-    else if (a === 'copiapix') copiarTexto(C.pixChave || '');
+    else if (a === 'copiapix') copiarTexto(C.pixChave || '', 'Chave Pix copiada.');
+    else if (a === 'copiabr') copiarTexto(PG.br || '', 'Código Pix copiado. Cole no app do seu banco.');
+    else if (a === 'pgnovo') pgIniciar(true);
     else if (a === 'lbfechar') fecharLightbox();
     else if (a === 'lbant') lbMover(-1);
     else if (a === 'lbprox') lbMover(1);
@@ -647,6 +982,8 @@ html{touch-action:manipulation}
     else if (a === 'fechaaviso') { dispensar(el.getAttribute('data-id')); desenharPortal(); }
   });
   mo.addEventListener('click', function (e) { if (e.target === mo) fecharModal(); });
+  // no celular, tocar em Enviar com o teclado aberto tirava o foco da caixa e a tela pulava: segura o foco
+  mo.addEventListener('mousedown', function (e) { if (e.target.closest && e.target.closest('[data-a="enviarcom"],[data-a="confirmar"]')) e.preventDefault(); });
   window.addEventListener('popstate', function () { if (ignorarPop > 0) { ignorarPop--; return; } if (modalPush) { modalPush = false; mo.className = 'mo'; mo.innerHTML = ''; return; } if (LBI >= 0) { fecharVisual(); return; } P = new URLSearchParams(location.search); TC = P.get('c') || ''; TG = P.get('g') || ''; rotear(); });
 
   function rotear() {
