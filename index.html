@@ -975,6 +975,7 @@ html{touch-action:manipulation}
     var m = String(C.pagamentoModo || 'auto').toLowerCase(), ip = !!String(C.infinitePay || '').replace(/\s/g, ''), px = !!String(C.pixChave || '').replace(/\s/g, '');
     if (m === 'chave') return 'chave';
     if (m === 'pixcartao') return (ip && px) ? 'pixcartao' : (ip ? 'infinitepay' : (px ? 'pix' : 'chave'));   // PF-PIX-CARTAO-V1: QR Pix + botão de cartão
+    if (m === 'pixcartao') return (ip && px) ? 'pixcartao' : (ip ? 'infinitepay' : (px ? 'pix' : 'chave'));   // PF-PIX-CARTAO-V1: QR Pix + botão de cartão
     if (m === 'infinitepay' && ip) return 'infinitepay';
     if (m === 'pix' && px) return 'pix';
     return ip ? 'infinitepay' : (px ? 'pix' : 'chave');
@@ -1013,6 +1014,7 @@ html{touch-action:manipulation}
       if (q) q.innerHTML = '<div class="pgx"><b>Tempo esgotado</b><br>O QR Code expirou. Gere um novo para pagar.</div>';
       if (a) a.innerHTML = '<button class="btn" data-a="pgnovo">Gerar novo QR Code</button>';
       var pc = document.getElementById('pgc'); if (pc) pc.innerHTML = '';   // PF-PIX-CARTAO-V1
+      var pc = document.getElementById('pgc'); if (pc) pc.innerHTML = '';   // PF-PIX-CARTAO-V1
       return;
     }
     if (el) { el.textContent = mmss(resta); el.className = 'pgt' + (resta < 60000 ? ' low' : ''); }
@@ -1036,6 +1038,22 @@ html{touch-action:manipulation}
       catch (e) { pgErro('Não consegui gerar o QR Code. Use a chave Pix abaixo.'); return; }
       pgPintar(meu.br, '<button class="btn" data-a="copiabr">Copiar Pix copia e cola</button>');
     }
+    // PF-PIX-CARTAO-V1: QR Pix em cima; embaixo, botão "Pagar com cartão" que abre a InfinitePay (confirmação automática)
+    function cartao() {
+      var c = document.getElementById('pgc'); if (c) c.innerHTML = '<small style="opacity:.7">Preparando o pagamento com cartão…</small>';
+      getJson('/api/galeria/pagamento' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: valor, descricao: titulo(), retorno: urlRetorno() }) })
+        .then(function (r) {
+          if (meu !== PG) return;
+          var u = String((r && r.url) || '');
+          if (!/^https:\/\/([a-z0-9-]+\.)*infinitepay\.(io|com\.br)\//i.test(u)) throw new Error('link');
+          meu.url = u; meu.ref = String((r && r.ref) || '');
+          var c2 = document.getElementById('pgc');
+          if (c2) c2.innerHTML = '<div style="opacity:.7;font-size:13px;margin-bottom:8px">ou pague com cartão</div><a class="btn sec" target="_blank" rel="noopener" href="' + esc(u) + '">Pagar com cartão</a><div class="pgs" style="margin-top:6px">Se pagar no cartão, esta tela avisa quando confirmar.</div>';
+          pgVigiar(meu);
+        })
+        .catch(function () { if (meu !== PG) return; var c3 = document.getElementById('pgc'); if (c3) c3.innerHTML = ''; });
+    }
+    if (modo === 'pixcartao') { viaPix(); cartao(); return; }
     // PF-PIX-CARTAO-V1: QR Pix em cima; embaixo, botão "Pagar com cartão" que abre a InfinitePay (confirmação automática)
     function cartao() {
       var c = document.getElementById('pgc'); if (c) c.innerHTML = '<small style="opacity:.7">Preparando o pagamento com cartão…</small>';
