@@ -550,7 +550,7 @@ html{touch-action:manipulation}
   function preco() { return Number(C.precoExtra) || 0; }
   function extras() { var inc = incl(); return inc > 0 ? Math.max(SEL.size - inc, 0) : 0; }
   // seleção liberada de novo: as extras que já tinham sido enviadas antes não são cobradas outra vez
-  function extrasJaEnviadas() { var inc = incl(); return (C.reaberta && inc > 0) ? Math.max(ENV.size - inc, 0) : 0; }
+  function extrasJaEnviadas() { return 0; }   // PF-EXTRAS-PAGOS-V1: enviar não é pagar; só o pagamento confirmado abate (veja valorRestante)
   function extrasACobrar() { return Math.max(extras() - extrasJaEnviadas(), 0); }
   function valorACobrar() { return Math.round(extrasACobrar() * preco() * 100) / 100; }
   function avisoExtra() {
@@ -593,7 +593,7 @@ html{touch-action:manipulation}
     if (ex > 0) {
       rs = ' over';
       subs.push('<span class="xt">+' + ex + ' extra' + (ex > 1 ? 's' : '') + (pr > 0 ? ' × ' + brl(pr) : '') + '</span>');
-      if (pr > 0) { gl = ' ex'; val = '<div class="gv"><small>a pagar agora</small><strong>' + brl(valorACobrar()) + '</strong></div>'; }
+      if (pr > 0) { gl = ' ex'; val = '<div class="gv"><small>a pagar agora</small><strong>' + brl(valorRestante()) + '</strong></div>'; }   // PF-EXTRAS-PAGOS-V1
       if (reab && ja > 0) subs.push('(' + ja + ' já enviada(s))');
     } else {
       subs.push('Nenhuma foto extra');
@@ -894,7 +894,7 @@ html{touch-action:manipulation}
     if (!num) return '';
     if (num.length <= 11) num = '55' + num;
     var ex = extras();
-    var msg = (C.mensagemWhatsapp || 'Olá! Já fiz a seleção das fotos.') + '\n\n' + titulo() + '\nFotos selecionadas: ' + SEL.size + (ex ? '\nExtras: ' + ex + (C.precoExtra > 0 ? ' (' + brl(ex * C.precoExtra) + ')' : '') + (valorACobrar() > 0 ? '\nValor dos extras a pagar: ' + brl(valorACobrar()) : '') : '') + (PAGO && PAGO.recibo ? '\nComprovante: ' + PAGO.recibo : '') + (valorRestante() > 0 ? '\nPagamento pendente: ' + brl(valorRestante()) : '');
+    var msg = (C.mensagemWhatsapp || 'Olá! Já fiz a seleção das fotos.') + '\n\n' + titulo() + '\nFotos selecionadas: ' + SEL.size + (ex ? '\nExtras: ' + ex + (C.precoExtra > 0 ? ' (' + brl(ex * C.precoExtra) + ')' : '') + (valorRestante() > 0 ? '\nValor dos extras a pagar: ' + brl(valorRestante()) : '') : '') + (PAGO && PAGO.recibo ? '\nComprovante: ' + PAGO.recibo : '') + (valorRestante() > 0 ? '\nPagamento pendente: ' + brl(valorRestante()) : '');
     return 'https://wa.me/' + num + '?text=' + encodeURIComponent(msg);
   }
 
@@ -1102,7 +1102,8 @@ html{touch-action:manipulation}
       '<div><span>Fotos selecionadas</span><b>' + SEL.size + '</b></div>' + (C.reaberta ? '<div><span>Já enviadas antes</span><b>' + ENV.size + '</b></div><div><span>Novas nesta rodada</span><b>' + novasSel() + '</b></div>' : '') + (inc ? '<div><span>Incluídas no pacote</span><b>' + inc + '</b></div>' : '') +
       (ex ? '<div><span>Fotos extras' + (pr > 0 ? ' (' + brl(pr) + ' cada)' : '') + '</span><b>' + ex + '</b></div>' : '') +
       (ja ? '<div><span>Extras já cobradas antes</span><b>' + ja + '</b></div>' : '') +
-      (cobrar > 0 ? '<div class="tot"><span>Total a pagar</span><span>' + brl(cobrar) + '</span></div>' : '') + '</div>';
+      (cobrar > 0 && cobrar - valorRestante() > 0 ? '<div><span>Já pago</span><b>' + brl(cobrar - valorRestante()) + '</b></div>' : '') +   // PF-EXTRAS-PAGOS-V1
+      (cobrar > 0 ? '<div class="tot"><span>Total a pagar</span><span>' + brl(valorRestante() > 0 ? valorRestante() : cobrar) + '</span></div>' : '') + '</div>';
     var mostrar = cobrar > 0 && pgTem(), jaPago = mostrar && pgModo() !== 'chave' && valorRestante() <= 0;
     if (jaPago) h += '<div class="pg"><div class="pgok"><b>Pagamento confirmado ✓</b><br>Extras pagos: ' + brl(cobrar) + '. Agora é só tocar em Confirmar e enviar.</div></div>';
     else if (mostrar) h += pgHtml(pgModo() === 'chave' ? cobrar : valorRestante());
