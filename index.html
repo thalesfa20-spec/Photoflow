@@ -33,6 +33,9 @@ h1{overflow-wrap:anywhere;margin:4px 0 0;font-size:30px;line-height:1.15;font-we
 .ph img{width:100%;height:100%;object-fit:cover;display:block}
 .ph.on{outline:3px solid var(--ac);outline-offset:-3px}
 .acts{position:absolute;right:10px;bottom:10px;display:flex;gap:8px}
+/* PF-NOME-FOTO-V1: nome da foto, pequeno, no canto superior direito (longe dos botões e do check de selecionada) */
+.ph .nm{position:absolute;top:8px;right:8px;max-width:calc(100% - 52px);padding:3px 8px;border-radius:999px;background:rgba(8,10,18,.66);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.16);color:#fff;font-size:11px;font-weight:600;line-height:1.3;letter-spacing:.02em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.6);pointer-events:none;-webkit-user-select:none;user-select:none}
+@media (pointer:coarse){.ph .nm{top:7px;right:7px;font-size:10.5px;padding:2px 7px}}
 .rb{width:38px;height:38px;border-radius:50%;border:0;background:rgba(15,18,30,.72);color:#fff;display:grid;place-items:center}
 @media (hover:hover){.rb:hover{background:rgba(15,18,30,.85)}}
 .rb.fav.on{background:#ef4444}.rb.fav.on svg{fill:#fff}
@@ -151,6 +154,51 @@ html{touch-action:manipulation}
 .md{--mp:22px}@media(max-width:700px){.md{--mp:18px}}
 .md .rowb.fix{position:sticky;bottom:calc(-1 * var(--mp));margin:16px calc(-1 * var(--mp)) calc(-1 * var(--mp));padding:12px var(--mp) calc(14px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--bd);z-index:2}
 /* ===== /PHOTOFLOW-FIX v3 ===== */
+/* ===== PHOTOFLOW-FIX v4 (barra de vidro) ===== */
+.bar{background:none;border:0;box-shadow:none;padding:0 max(12px,env(safe-area-inset-left,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-right,0px));pointer-events:none}
+.bar .gl{pointer-events:auto;max-width:900px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:12px 14px 12px 16px;border-radius:24px;
+  background:linear-gradient(135deg,rgba(255,255,255,.13),rgba(255,255,255,.03) 60%),rgba(17,24,39,.55);
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 18px 44px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.16);
+  -webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);transform:translateZ(0)}
+.bar.ex .gl{border-color:rgba(245,184,75,.5);box-shadow:0 18px 44px rgba(0,0,0,.5),0 0 34px rgba(245,184,75,.16),inset 0 1px 0 rgba(255,255,255,.16)}
+[data-theme=light] .bar .gl{background:linear-gradient(135deg,rgba(255,255,255,.85),rgba(255,255,255,.45)),rgba(255,255,255,.4);border-color:rgba(15,23,42,.1);box-shadow:0 16px 40px rgba(15,23,42,.18),inset 0 1px 0 rgba(255,255,255,.9)}
+[data-theme=light] .bar.ex .gl{border-color:rgba(217,142,10,.5)}
+[data-theme=light] .bar.ex .gv strong{background:linear-gradient(135deg,#d97706,#b45309);-webkit-background-clip:text;background-clip:text;filter:none}
+[data-theme=light] .bar .gi .xt{color:#b45309}
+[data-theme=light] .bar .gr.over{--rc:#d97706}
+@supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.bar .gl{background:var(--card)}}
+@media (prefers-reduced-transparency:reduce){.bar .gl{background:var(--card);-webkit-backdrop-filter:none;backdrop-filter:none}}
+.bar .gt{flex:1;min-width:0;display:flex;align-items:center;gap:14px}
+.bar .gr{--rc:var(--ac2);position:relative;flex:none;width:54px;height:54px;border-radius:50%;display:grid;place-items:center}
+.bar .gr::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--rc) calc(var(--p) * 1%),rgba(255,255,255,.14) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px))}
+[data-theme=light] .bar .gr::before{background:conic-gradient(var(--rc) calc(var(--p) * 1%),rgba(15,23,42,.12) 0)}
+.bar .gr.full{--rc:var(--ok)}.bar .gr.over{--rc:var(--warn)}
+.bar .gr b{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.bar .gi{min-width:0;flex:1}
+.bar .gi b{display:block;font-size:15px;font-weight:700;line-height:1.25}
+.bar .gi small{display:block;color:var(--mut);font-size:12.5px;line-height:1.35;margin-top:2px}
+.bar .gi .xt{color:var(--warn);font-weight:700}
+.bar .gv{flex:none;text-align:right;padding-left:14px;border-left:1px solid rgba(255,255,255,.14)}
+[data-theme=light] .bar .gv{border-left-color:rgba(15,23,42,.12)}
+.bar .gv small{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.bar .gv strong{display:block;font-size:26px;line-height:1.1;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--tx);margin-top:2px}
+.bar.ex .gv strong{background:linear-gradient(135deg,#ffd37a,var(--warn) 55%,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 14px rgba(245,184,75,.28))}
+.bar .gv.ok strong{color:var(--ok);font-size:18px}
+.bar .gv.n strong{font-size:20px}
+.bar .gl .btn{flex:none;background:linear-gradient(135deg,var(--ac),#8b5cf6);border-radius:16px;padding:14px 22px;white-space:nowrap;box-shadow:0 8px 22px rgba(99,102,241,.4),inset 0 1px 0 rgba(255,255,255,.25)}
+.bar .gl .btn:disabled{box-shadow:none}
+.grid{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+@media(max-width:700px){
+  .bar .gl{flex-direction:column;align-items:stretch;gap:10px;padding:12px;border-radius:22px}
+  .bar .gr{width:48px;height:48px}.bar .gr b{font-size:17px}
+  .bar .gt{gap:12px}
+  .bar .gv{padding-left:12px}.bar .gv strong{font-size:23px}
+  .bar .gl .btn{width:100%;padding:14px 16px}
+  .grid{padding-bottom:calc(196px + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:calc(176px + env(safe-area-inset-bottom,0px))}
+}
+@media (pointer:coarse){.bar .gl{-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4)}}
 </style>
 <script>window.NUVEM_URL="https://script.google.com/macros/s/AKfycbwaWUJcxdYlMDBZ9zGukvXmgb5VRBKCOpe-zkfVM2E4c4L6DKfV9oYOLS-6EmRC8Vaq/exec";</script>
 </head>
@@ -340,6 +388,8 @@ html{touch-action:manipulation}
   };
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  // PF-NOME-FOTO-V1: nome da foto sem a extensão (Manuh-12.jpg -> Manuh-12)
+  function nomeCurto(n) { return String(n == null ? '' : n).replace(/\.[A-Za-z0-9]{2,5}$/, ''); }
   function brl(n) { return Number(n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
   function toast(t) { var el = document.getElementById('toast'); el.textContent = t; el.className = 'toast on'; clearTimeout(toast._t); toast._t = setTimeout(function () { el.className = 'toast'; }, 2600); }
   function getJson(url, opts) { return fetch(url, opts).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); }
@@ -500,17 +550,24 @@ html{touch-action:manipulation}
 
   function barra() {
     if (entrega() || C.permitirSelecao === false) return '';
-    var inc = incl(), ex = extras(), pr = preco(), reab = C.reaberta && !C.finalizada;
-    var l1 = inc > 0 ? SEL.size + ' de ' + inc + ' incluídas' : SEL.size + ' selecionada(s)';
-    var l2 = '', xt = '';
+    var inc = incl(), n = SEL.size, ex = extras(), pr = preco(), reab = C.reaberta && !C.finalizada;
+    var ja = extrasJaEnviadas(), l1 = inc > 0 ? n + ' de ' + inc + ' incluídas' : n + ' selecionada' + (n === 1 ? '' : 's');
+    var subs = [], val = '', rs = '', gl = '';
+    var pct = inc > 0 ? Math.min(100, Math.round(n / inc * 100)) : (n ? 100 : 0);
     if (ex > 0) {
-      var ja = extrasJaEnviadas();
-      if (reab && ja > 0) xt = '<span class="xt">+' + ex + ' extra(s)' + (pr > 0 ? ' · a pagar agora: <b>' + brl(valorACobrar()) + '</b>' : '') + '<small> (' + ja + ' já enviada(s))</small></span>';
-      else xt = '<span class="xt">+' + ex + ' extra' + (ex > 1 ? 's' : '') + (pr > 0 ? ' × ' + brl(pr) + ' = <b>' + brl(ex * pr) + '</b>' : '') + '</span>';
-    } else l2 = 'Nenhuma foto extra';
-    if (reab) l2 += (l2 ? ' · ' : '') + novasSel() + ' nova(s) desde o envio';
-    return '<div class="bar' + (ex > 0 && pr > 0 ? ' ex' : '') + '" id="bar"><div class="wrap"><div class="inf"><b>' + l1 + '</b>' + xt + (l2 ? '<small>' + l2 + '</small>' : '') + '</div>' +
-      '<button class="btn" data-a="finalizar"' + (!SEL.size || C.finalizada ? ' disabled' : '') + '>' + (C.finalizada ? 'Seleção enviada' : (C.reaberta ? 'Reenviar seleção' : 'Finalizar seleção')) + '</button></div></div>';
+      rs = ' over';
+      subs.push('<span class="xt">+' + ex + ' extra' + (ex > 1 ? 's' : '') + (pr > 0 ? ' × ' + brl(pr) : '') + '</span>');
+      if (pr > 0) { gl = ' ex'; val = '<div class="gv"><small>a pagar agora</small><strong>' + brl(valorACobrar()) + '</strong></div>'; }
+      if (reab && ja > 0) subs.push('(' + ja + ' já enviada(s))');
+    } else {
+      subs.push('Nenhuma foto extra');
+      if (inc > 0 && n === inc) { rs = ' full'; val = '<div class="gv ok"><small>pacote</small><strong>Completo ✓</strong></div>'; }
+      else if (inc > 0 && n < inc) val = '<div class="gv n"><small>ainda inclui</small><strong>' + (inc - n) + ' foto' + (inc - n > 1 ? 's' : '') + '</strong></div>';
+    }
+    if (reab) subs.push(novasSel() + ' nova(s) desde o envio');
+    return '<div class="bar' + gl + '" id="bar"><div class="gl"><div class="gt"><div class="gr' + rs + '" style="--p:' + pct + '"><b>' + n + '</b></div>' +
+      '<div class="gi"><b>' + l1 + '</b><small>' + subs.join(' · ') + '</small></div>' + val + '</div>' +
+      '<button class="btn" data-a="finalizar"' + (!n || C.finalizada ? ' disabled' : '') + '>' + (C.finalizada ? 'Seleção enviada' : (C.reaberta ? 'Reenviar seleção' : 'Finalizar seleção')) + '</button></div></div>';
   }
 
     function cartao(n, i) {
@@ -518,7 +575,7 @@ html{touch-action:manipulation}
     if (C.permitirComentarios !== false) b += '<button class="rb com' + (temCom(n) ? ' on' : '') + '" data-a="com" data-n="' + esc(n) + '" title="Comentar">' + IC.msg + '</button>';
     if (C.permitirFavoritas !== false) b += '<button class="rb fav' + (FAV.has(n) ? ' on' : '') + '" data-a="fav" data-n="' + esc(n) + '" title="Favoritar">' + IC.heart + '</button>';
     if (C.permitirSelecao !== false && !entrega()) b += '<button class="rb sel' + (SEL.has(n) ? ' on' : '') + '" data-a="sel" data-n="' + esc(n) + '" title="Selecionar">' + IC.check + '</button>';
-    return '<div class="ph' + (SEL.has(n) ? ' on' : '') + '" data-card="' + esc(n) + '" data-a="ver" data-i="' + i + '"><img loading="lazy" decoding="async" src="' + fotoUrl(n) + '" alt="' + esc(n) + '"><div class="acts">' + b + '</div></div>';
+    return '<div class="ph' + (SEL.has(n) ? ' on' : '') + '" data-card="' + esc(n) + '" data-a="ver" data-i="' + i + '"><img loading="lazy" decoding="async" src="' + fotoUrl(n) + '" alt="' + esc(n) + '"><span class="nm">' + esc(nomeCurto(n)) + '</span><div class="acts">' + b + '</div></div>';
   }
 
   function grade() {
@@ -636,7 +693,7 @@ html{touch-action:manipulation}
     if (C.permitirDownload) b += '<a class="rb" href="' + fotoUrl(n, true) + '" download="' + esc(n) + '" target="_blank" rel="noopener" title="Baixar">' + IC.dl + '</a>';
     return b;
   }
-  function ctTexto(n) { return (LBI + 1) + ' de ' + LISTA.length + (SEL.has(n) ? ' \u00b7 \u2713 selecionada' : '') + (FAV.has(n) ? ' \u00b7 \u2665' : ''); }
+  function ctTexto(n) { return nomeCurto(n) + ' \u00b7 ' + (LBI + 1) + ' de ' + LISTA.length + (SEL.has(n) ? ' \u00b7 \u2713 selecionada' : '') + (FAV.has(n) ? ' \u00b7 \u2665' : ''); }
   function atualizarLightbox(novo) {
     if (LBI < 0 || !LISTA.length) return;
     if (LBI >= LISTA.length) LBI = LISTA.length - 1;
@@ -648,7 +705,7 @@ html{touch-action:manipulation}
       return;
     }
     lbNome = n; G.s = 1; G.x = 0; G.y = 0; T = null; houveMulti = false;
-    lb.innerHTML = '<div class="st"><div class="ct">' + ctTexto(n) + '</div><button class="rb cl" data-a="lbfechar">' + IC.x + '</button>' +
+    lb.innerHTML = '<div class="st"><div class="ct">' + esc(ctTexto(n)) + '</div><button class="rb cl" data-a="lbfechar">' + IC.x + '</button>' +
       '<button class="nv l" data-a="lbant">' + IC.l + '</button><img draggable="false" src="' + fotoUrl(n, false, true) + '" alt="' + esc(n) + '"><button class="nv r" data-a="lbprox">' + IC.r + '</button></div><div class="ft">' + botoesLb(n) + '</div>';
     setTimeout(function () { precarregar(LBI + 1); precarregar(LBI - 1); }, 400);   // a próxima foto já fica pronta
   }
