@@ -479,6 +479,15 @@ html{touch-action:manipulation}
       D = d; C = d.config || {};
       ENV = new Set(d.selecionadasEnviadas || []); SEL = new Set(d.selecionadas || []); FAV = new Set(d.favoritas || []); COM = d.comentarios || {}; FILTRO = 'todas'; PASTA = ''; PMAP = {};
       if (d.pastas && d.pastas.length > 1 && d.fotoPasta) (d.fotos || []).forEach(function (n, i) { var k = d.fotoPasta[i]; if (k != null && d.pastas[k] != null) PMAP[n] = d.pastas[k]; });
+      // PF-ORDEM-PAGINA-V1: ordem natural (Foto-2 antes de Foto-10 antes de Foto-100), mantendo o agrupamento por pasta
+      try {
+        var pOrd = {}; if (d.pastas && d.pastas.length > 1) d.pastas.forEach(function (nm, k) { pOrd[nm] = k; });
+        d.fotos = (d.fotos || []).slice().sort(function (a, b) {
+          var pa = pOrd[PMAP[a]] || 0, pb = pOrd[PMAP[b]] || 0;
+          if (pa !== pb) return pa - pb;
+          return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+        });
+      } catch (eOrd) { }
       desenharGaleria();
       pagoRetorno();
     }).catch(function () {
@@ -1008,6 +1017,8 @@ html{touch-action:manipulation}
       (cobrar > 0 ? '<div class="tot"><span>Total a pagar</span><span>' + brl(cobrar) + '</span></div>' : '') + '</div>';
     var mostrar = cobrar > 0 && pgTem();
     if (mostrar) h += pgHtml(cobrar);
+    else if (ex > 0 && inc > 0 && pr <= 0) h += '<div class="ban">O valor da foto extra ainda n\u00e3o foi definido. Ao enviar, o fot\u00f3grafo combina com voc\u00ea o pagamento das ' + ex + ' extra' + (ex > 1 ? 's' : '') + ' pelo WhatsApp.</div>';   // PF-COBRANCA-EXTRAS-V1
+    else if (cobrar > 0) h += '<div class="ban">Pagamento online indispon\u00edvel no momento. Ao enviar, o fot\u00f3grafo combina com voc\u00ea o pagamento de ' + brl(cobrar) + ' pelo WhatsApp.</div>';
     h += '<div class="rowb fix"><button class="btn sec" data-a="mfechar">Voltar</button><button class="btn" data-a="confirmar">Confirmar e enviar</button></div>';
     abrirModal(h);
     if (mostrar && pgModo() !== 'chave') pgIniciar(false);
