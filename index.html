@@ -144,6 +144,8 @@ html{touch-action:manipulation}
 .pg .pgq .ld{color:var(--mut);font-size:13.5px;text-align:center}
 .spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--bd);border-top-color:var(--ac);animation:giro .8s linear infinite;margin:0 auto 8px}
 @keyframes giro{to{transform:rotate(360deg)}}
+.pg .pgs{text-align:center;font-size:13px;color:var(--mut);margin:6px 0}
+.pg .pgok{text-align:center;color:var(--ok);font-size:15px;line-height:1.55;padding:16px 6px}
 .pg .pga{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:8px 0 2px}
 .pg .pga .btn{padding:10px 14px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
 .pg .pgk{border-top:1px dashed var(--bd);margin-top:12px;padding-top:10px;font-size:13.5px}
@@ -224,8 +226,24 @@ html{touch-action:manipulation}
   var TG = P.get('g') || '';
   var PAGO = null;   // voltou da InfinitePay depois de pagar
   if (P.get('transaction_nsu') || P.get('receipt_url')) {
-    PAGO = { recibo: P.get('receipt_url') || '', metodo: P.get('capture_method') || '' };
+    PAGO = { recibo: P.get('receipt_url') || '', metodo: P.get('capture_method') || '', ref: P.get('order_nsu') || '', trans: P.get('transaction_nsu') || '', slug: P.get('slug') || '' };   // PF-PAGAMENTO-SEGURO-V1: isto NÃO prova pagamento; o script do Google confere com a InfinitePay
     try { history.replaceState({}, '', location.pathname + '?' + (TC ? 'c=' + encodeURIComponent(TC) + '&' : '') + 'g=' + encodeURIComponent(TG)); } catch (e) { }
+  }
+
+  // PF-PAGAMENTO-SEGURO-V1: QR curto. O QR leva a este endereço pequeno (?g=...&pg=pedido); aqui buscamos o link da InfinitePay e abrimos.
+  var PGLINK = P.get('pg') || '';
+  var NV0 = String(window.NUVEM_URL || '').replace(/\s+/g, '');
+  if (PGLINK && NV0) {
+    document.getElementById('app').innerHTML = '<div class="msg"><h2>Abrindo o pagamento…</h2></div>';
+    fetch(NV0, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'pagamento-link', g: TG, ref: PGLINK }) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var u = String((j && j.url) || '');
+        if (!/^https:\/\/([a-z0-9-]+\.)*infinitepay\.(io|com\.br)\//i.test(u)) throw new Error('link');
+        location.replace(u);
+      })
+      .catch(function () { document.getElementById('app').innerHTML = '<div class="msg"><h2>Não consegui abrir o pagamento</h2><p>Volte para a galeria no computador e gere um novo QR Code.</p></div>'; });
+    return;
   }
 
   // ------------------------------------------------------------------ MODO NUVEM (Google Drive + Apps Script)
@@ -876,7 +894,7 @@ html{touch-action:manipulation}
     if (!num) return '';
     if (num.length <= 11) num = '55' + num;
     var ex = extras();
-    var msg = (C.mensagemWhatsapp || 'Olá! Já fiz a seleção das fotos.') + '\n\n' + titulo() + '\nFotos selecionadas: ' + SEL.size + (ex ? '\nExtras: ' + ex + (C.precoExtra > 0 ? ' (' + brl(ex * C.precoExtra) + ')' : '') + (valorACobrar() > 0 ? '\nValor dos extras a pagar: ' + brl(valorACobrar()) : '') : '') + (PAGO && PAGO.recibo ? '\nComprovante: ' + PAGO.recibo : '');
+    var msg = (C.mensagemWhatsapp || 'Olá! Já fiz a seleção das fotos.') + '\n\n' + titulo() + '\nFotos selecionadas: ' + SEL.size + (ex ? '\nExtras: ' + ex + (C.precoExtra > 0 ? ' (' + brl(ex * C.precoExtra) + ')' : '') + (valorACobrar() > 0 ? '\nValor dos extras a pagar: ' + brl(valorACobrar()) : '') : '') + (PAGO && PAGO.recibo ? '\nComprovante: ' + PAGO.recibo : '') + (valorRestante() > 0 ? '\nPagamento pendente: ' + brl(valorRestante()) : '');
     return 'https://wa.me/' + num + '?text=' + encodeURIComponent(msg);
   }
 
@@ -925,13 +943,31 @@ html{touch-action:manipulation}
   function urlRetorno() {
     try { if (location.protocol !== 'https:') return ''; return location.origin + location.pathname + '?' + (TC ? 'c=' + encodeURIComponent(TC) + '&' : '') + 'g=' + encodeURIComponent(TG); } catch (e) { return ''; }
   }
+  // PF-PAGAMENTO-SEGURO-V1: a volta da InfinitePay (?order_nsu=...) não prova nada; o script do Google pergunta à InfinitePay
   function pagoRetorno() {
     if (!PAGO) return;
     if (!D || C.finalizada) { PAGO = null; return; }
+    if (!NV || !PAGO.ref) { modalPagoNaoConfirmado(); return; }
+    abrirModal('<h3>Conferindo o pagamento…</h3><div class="pg"><div class="pgq"><div class="ld"><div class="spin"></div>Falando com a InfinitePay…</div></div></div>');
+    pgConferir(0);
+  }
+  function pgConferir(tent) {
+    var de = function () { if (tent < 5) setTimeout(function () { pgConferir(tent + 1); }, 3000); else modalPagoNaoConfirmado(); };
+    getJson('/api/galeria/pagamento-confirmar' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ref: PAGO.ref, transaction_nsu: PAGO.trans, slug: PAGO.slug }) })
+      .then(function (r) {
+        if (r && r.pago) { C.pagoRodada = Number(r.pagoRodada) || C.pagoRodada; modalPagoOk(); } else de();
+      })
+      .catch(de);
+  }
+  function modalPagoOk() {
     var v = valorACobrar();
-    abrirModal('<h3>Pagamento recebido ✓</h3><p>Obrigado! Agora é só enviar a sua seleção ao fotógrafo.</p><div class="sum"><div><span>Fotos selecionadas</span><b>' + SEL.size + '</b></div>' +
+    abrirModal('<h3>Pagamento confirmado ✓</h3><p>Obrigado! Agora é só enviar a sua seleção ao fotógrafo.</p><div class="sum"><div><span>Fotos selecionadas</span><b>' + SEL.size + '</b></div>' +
       (v > 0 ? '<div><span>Extras pagas</span><b>' + brl(v) + '</b></div>' : '') + '</div>' +
       '<div class="rowb"><button class="btn sec" data-a="mfechar">Depois</button><button class="btn" data-a="confirmar">Confirmar e enviar</button></div>');
+  }
+  function modalPagoNaoConfirmado() {
+    abrirModal('<h3>Ainda não consegui confirmar o pagamento</h3><p>Se você já pagou, a confirmação pode levar alguns instantes: toque em <b>Conferir de novo</b>. Você também pode enviar a seleção agora: ela vai marcada com <b>pagamento pendente</b> e o fotógrafo confere com você.</p>' +
+      '<div class="rowb fix"><button class="btn sec" data-a="pgconferir">Conferir de novo</button><button class="btn" data-a="confirmar">Enviar mesmo assim</button></div>');
   }
 
   var PG = { t: 0, fim: 0, valor: 0, modo: '', url: '', br: '', usado: '', expirou: false };
@@ -944,7 +980,7 @@ html{touch-action:manipulation}
   }
   function pgMin() { var m = Number(C.pagamentoMinutos); return (m >= 1 && m <= 60) ? Math.floor(m) : 10; }
   function mmss(ms) { var s = Math.max(0, Math.ceil(ms / 1000)), m = Math.floor(s / 60); s = s % 60; return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
-  function pgParar() { clearInterval(PG.t); PG.t = 0; }
+  function pgParar() { clearInterval(PG.t); PG.t = 0; clearInterval(PG.v); PG.v = 0; }
   function pgTem() { return pgModo() !== 'chave' || !!(C.pixChave || C.pixInfo || C.pixQr); }
 
   function pgHtml(valor) {
@@ -952,12 +988,15 @@ html{touch-action:manipulation}
       (modo !== 'chave' ? '<span class="pgt" id="pgt">' + mmss(pgMin() * 60000) + '</span>' : '') + '</div><div class="pgv">' + brl(valor) + '</div>';
     if (modo !== 'chave') {
       h += '<div class="pgq" id="pgq"><div class="ld"><div class="spin"></div>Gerando QR Code…</div></div><div class="pga" id="pga"></div>' +
-        '<div class="pgd">Abra o app do seu banco, escolha pagar com QR Code e aponte a câmera. No celular, use o botão acima. Depois de pagar, toque em <b>Confirmar e enviar</b>.</div>';
+        '<div class="pgs" id="pgs">' + (modo === 'infinitepay' ? 'Aguardando o pagamento…' : '') + '</div>' +
+        '<div class="pgd">' + (modo === 'infinitepay'
+          ? 'Aponte a câmera do celular para o QR Code (a câmera comum, não o app do banco): abre a página de pagamento da InfinitePay, onde você escolhe Pix ou cartão. No celular, use o botão acima. Quando o pagamento for confirmado, esta tela avisa. Se você enviar a seleção antes de pagar, ela vai com <b>pagamento pendente</b> e o fotógrafo combina com você.'
+          : 'Abra o app do seu banco, escolha pagar com QR Code e aponte a câmera. No celular, use o botão acima. Depois de pagar, toque em <b>Confirmar e enviar</b>.') + '</div>';
     } else if (C.pixQr) {
       h += '<div class="pgq"><img src="/api/pix-qr?v=' + Date.now() + '" alt="QR Code Pix" style="width:190px;max-width:70vw;background:#fff;padding:6px;border-radius:10px"></div>';
     }
-    if (C.pixChave) h += '<div class="pgk"><b>Chave Pix</b><code>' + esc(C.pixChave) + '</code><button class="btn sec" data-a="copiapix" style="padding:8px 14px">Copiar chave</button>' + (C.pixInfo ? '<pre>' + esc(C.pixInfo) + '</pre>' : '') + '</div>';
-    else if (C.pixInfo) h += '<div class="pgk"><pre>' + esc(C.pixInfo) + '</pre></div>';
+    if (modo !== 'infinitepay' && C.pixChave) h += '<div class="pgk"><b>Chave Pix</b><code>' + esc(C.pixChave) + '</code><button class="btn sec" data-a="copiapix" style="padding:8px 14px">Copiar chave</button>' + (C.pixInfo ? '<pre>' + esc(C.pixInfo) + '</pre>' : '') + '</div>';
+    else if (modo !== 'infinitepay' && C.pixInfo) h += '<div class="pgk"><pre>' + esc(C.pixInfo) + '</pre></div>';
     return h + '</div>';
   }
 
@@ -977,7 +1016,7 @@ html{touch-action:manipulation}
   function pgPintar(txt, acoes) {
     var q = document.getElementById('pgq'), a = document.getElementById('pga');
     if (!q || PG.expirou || Date.now() >= PG.fim) return;
-    try { q.innerHTML = PFQR.svg(txt, 'M'); } catch (e) { q.innerHTML = '<div class="pgx">Não consegui desenhar o QR Code. Use a chave Pix abaixo.</div>'; }
+    try { q.innerHTML = PFQR.svg(txt, 'M'); } catch (e) { q.innerHTML = '<div class="pgx">Não consegui desenhar o QR Code. Use o botão Abrir pagamento.</div>'; }
     // tamanho em múltiplo exato dos quadradinhos: o QR fica nítido e a câmera lê mais rápido
     try { var sv = q.querySelector('svg'), mod = sv.viewBox.baseVal.width, mx = Math.min(240, Math.floor(window.innerWidth * 0.7)); sv.style.width = Math.max(mod * 3, Math.floor(mx / mod) * mod) + 'px'; } catch (e) { }
     if (a) a.innerHTML = acoes;
@@ -998,17 +1037,56 @@ html{touch-action:manipulation}
       .then(function (r) {
         if (meu !== PG) return;
         var u = String((r && r.url) || '');
-        if (!/^https:\/\/([a-z0-9-]+\.)*infinitepay\.io\//i.test(u)) throw new Error('link');
-        meu.url = u; meu.usado = 'infinitepay';
-        pgPintar(u, '<a class="btn" target="_blank" rel="noopener" href="' + esc(u) + '">Abrir pagamento</a>');
+        if (!/^https:\/\/([a-z0-9-]+\.)*infinitepay\.(io|com\.br)\//i.test(u)) throw new Error('link');
+        meu.url = u; meu.usado = 'infinitepay'; meu.ref = String((r && r.ref) || '');
+        pgPintar((NV && meu.ref) ? urlCurta(meu.ref) : u, '<a class="btn" target="_blank" rel="noopener" href="' + esc(u) + '">Abrir pagamento</a>');
+        pgVigiar(meu);
       })
-      .catch(function () { viaPix(); });   // InfinitePay indisponível: cai para o QR do Pix
+      .catch(function () {
+        // PF-PAGAMENTO-SEGURO-V1: sem a InfinitePay não há como confirmar pagamento; a chave Pix pessoal não é mais plano B automático
+        if (meu !== PG) return;
+        var s = document.getElementById('pgs'); if (s) s.textContent = '';
+        pgErro('Não consegui gerar o pagamento agora. Você pode enviar a seleção: ela vai com pagamento pendente e o fotógrafo combina com você.');
+      });
+  }
+
+  // PF-PAGAMENTO-SEGURO-V1 ------------------------------------------------------------------------
+  // endereço curto que vai dentro do QR Code (o link da InfinitePay é longo demais para o gerador)
+  function urlCurta(ref) {
+    try { return location.origin + location.pathname + '?g=' + encodeURIComponent(TG) + '&pg=' + encodeURIComponent(ref); } catch (e) { return ''; }
+  }
+  // quanto ainda falta pagar (em reais), descontando o que o servidor já confirmou nesta rodada
+  function valorRestante() {
+    var v = Math.round(valorACobrar() * 100) - (Number(C.pagoRodada) || 0);
+    return v > 0 ? v / 100 : 0;
+  }
+  function pgConfirmadoUI() {
+    pgParar();
+    var t = document.getElementById('pgt'); if (t) { t.textContent = 'Pago ✓'; t.className = 'pgt'; }
+    var q = document.getElementById('pgq'); if (q) q.innerHTML = '<div class="pgok"><b>Pagamento confirmado ✓</b><br>Agora é só tocar em Confirmar e enviar.</div>';
+    var a = document.getElementById('pga'); if (a) a.innerHTML = '';
+    var s = document.getElementById('pgs'); if (s) s.textContent = '';
+  }
+  // pergunta ao script do Google, a cada ~4 s, se a InfinitePay já confirmou este pedido
+  function pgVigiar(meu) {
+    if (!NV || !meu.ref) return;
+    var ocupado = false;
+    meu.v = setInterval(function () {
+      if (meu !== PG || !document.getElementById('pg') || PG.expirou) { clearInterval(meu.v); return; }
+      if (ocupado) return; ocupado = true;
+      getJson('/api/galeria/pagamento-status' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ref: meu.ref }) })
+        .then(function (r) {
+          if (meu === PG && r && r.pago) { clearInterval(meu.v); C.pagoRodada = Number(r.pagoRodada) || C.pagoRodada; pgConfirmadoUI(); }
+        })
+        .catch(function () { })
+        .then(function () { ocupado = false; });
+    }, 4000);
   }
 
   function pgIniciar(novo) {
     pgParar();
     var modo = pgModo(); if (modo === 'chave') return;
-    var valor = valorACobrar(), sessao = 'pf_pg_' + (TG || TC || 'x') + '_' + valor.toFixed(2), fim = 0;
+    var valor = valorRestante(), sessao = 'pf_pg_' + (TG || TC || 'x') + '_' + valor.toFixed(2), fim = 0;
     if (!novo) { try { fim = Number(sessionStorage.getItem(sessao)) || 0; } catch (e) { } }   // reabrir o resumo não reinicia o contador
     if (!fim) { fim = Date.now() + pgMin() * 60000; try { sessionStorage.setItem(sessao, String(fim)); } catch (e) { } }
     PG = { t: 0, fim: fim, valor: valor, modo: modo, url: '', br: '', usado: '', expirou: false };
@@ -1025,13 +1103,14 @@ html{touch-action:manipulation}
       (ex ? '<div><span>Fotos extras' + (pr > 0 ? ' (' + brl(pr) + ' cada)' : '') + '</span><b>' + ex + '</b></div>' : '') +
       (ja ? '<div><span>Extras já cobradas antes</span><b>' + ja + '</b></div>' : '') +
       (cobrar > 0 ? '<div class="tot"><span>Total a pagar</span><span>' + brl(cobrar) + '</span></div>' : '') + '</div>';
-    var mostrar = cobrar > 0 && pgTem();
-    if (mostrar) h += pgHtml(cobrar);
+    var mostrar = cobrar > 0 && pgTem(), jaPago = mostrar && pgModo() !== 'chave' && valorRestante() <= 0;
+    if (jaPago) h += '<div class="pg"><div class="pgok"><b>Pagamento confirmado ✓</b><br>Extras pagos: ' + brl(cobrar) + '. Agora é só tocar em Confirmar e enviar.</div></div>';
+    else if (mostrar) h += pgHtml(pgModo() === 'chave' ? cobrar : valorRestante());
     else if (ex > 0 && inc > 0 && pr <= 0) h += '<div class="ban">O valor da foto extra ainda n\u00e3o foi definido. Ao enviar, o fot\u00f3grafo combina com voc\u00ea o pagamento das ' + ex + ' extra' + (ex > 1 ? 's' : '') + ' pelo WhatsApp.</div>';   // PF-COBRANCA-EXTRAS-V1
     else if (cobrar > 0) h += '<div class="ban">Pagamento online indispon\u00edvel no momento. Ao enviar, o fot\u00f3grafo combina com voc\u00ea o pagamento de ' + brl(cobrar) + ' pelo WhatsApp.</div>';
     h += '<div class="rowb fix"><button class="btn sec" data-a="mfechar">Voltar</button><button class="btn" data-a="confirmar">Confirmar e enviar</button></div>';
     abrirModal(h);
-    if (mostrar && pgModo() !== 'chave') pgIniciar(false);
+    if (mostrar && !jaPago && pgModo() !== 'chave') pgIniciar(false);
   }
 
   // PF-LIMPAR-V1: o cliente desmarca toda a seleção enquanto ainda está escolhendo (favoritas e comentários não mudam)
@@ -1058,12 +1137,13 @@ html{touch-action:manipulation}
     var bt = mo.querySelector('[data-a="confirmar"]'), tx = bt ? bt.textContent : '';
     if (bt) { bt.textContent = 'Enviando…'; bt.classList.add('busy'); }
     var wa = waLink();   // antes de atualizar o que já foi enviado, para o recado levar o valor certo
+    var pend = valorRestante();   // PF-PAGAMENTO-SEGURO-V1: o que ficou sem pagar (o servidor também confere)
     getJson('/api/galeria/finalizar' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ selecionadas: Array.from(SEL) }) })
       .then(function () {
         pgParar();
         C.finalizada = true; C.finalizadaEm = new Date().toLocaleString('pt-BR');
         if (C.reaberta) ENV = new Set(Array.from(SEL));
-        abrirModal('<h3>Seleção enviada! ✓</h3><p>Suas ' + SEL.size + ' fotos foram enviadas para o fotógrafo.' + (wa ? ' Avise pelo WhatsApp para agilizar.' : '') + '</p>' +
+        abrirModal('<h3>Seleção enviada! ✓</h3><p>Suas ' + SEL.size + ' fotos foram enviadas para o fotógrafo.' + (wa ? ' Avise pelo WhatsApp para agilizar.' : '') + '</p>' + (pend > 0 ? '<p><b>Pagamento pendente: ' + brl(pend) + '.</b> O fotógrafo vai combinar com você.</p>' : '') +
           '<div class="rowb"><button class="btn sec" data-a="mfechar">Fechar</button>' + (wa ? '<a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="' + wa + '">Avisar pelo WhatsApp</a>' : '') + '</div>');
         desenharGaleria();
       })
@@ -1091,6 +1171,7 @@ html{touch-action:manipulation}
     else if (a === 'copiapix') copiarTexto(C.pixChave || '', 'Chave Pix copiada.');
     else if (a === 'copiabr') copiarTexto(PG.br || '', 'Código Pix copiado. Cole no app do seu banco.');
     else if (a === 'pgnovo') pgIniciar(true);
+    else if (a === 'pgconferir') pagoRetorno();
     else if (a === 'lbfechar') fecharLightbox();
     else if (a === 'lbant') lbMover(-1);
     else if (a === 'lbprox') lbMover(1);
