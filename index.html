@@ -559,7 +559,7 @@ html{touch-action:manipulation}
   function preco() { return Number(C.precoExtra) || 0; }
   function extras() { var inc = incl(); return inc > 0 ? Math.max(SEL.size - inc, 0) : 0; }
   // seleção liberada de novo: as extras que já tinham sido enviadas antes não são cobradas outra vez
-  function extrasJaEnviadas() { return 0; }   // PF-EXTRAS-PAGOS-V1: enviar não é pagar; só o pagamento confirmado abate (veja valorRestante)
+  function extrasJaEnviadas() { var inc = incl(); return (C.reaberta && inc > 0) ? Math.max(ENV.size - inc, 0) : 0; }   // PF-LIMPAR-V2: cobra só as fotos novas
   function extrasACobrar() { return Math.max(extras() - extrasJaEnviadas(), 0); }
   function valorACobrar() { return Math.round(extrasACobrar() * preco() * 100) / 100; }
   function avisoExtra() {
@@ -612,7 +612,7 @@ html{touch-action:manipulation}
     if (reab) subs.push(novasSel() + ' nova(s) desde o envio');
     return '<div class="bar' + gl + '" id="bar"><div class="gl"><div class="gt"><div class="gr' + rs + '" style="--p:' + pct + '"><b>' + n + '</b></div>' +
       '<div class="gi"><b>' + l1 + '</b><small>' + subs.join(' · ') + '</small></div>' + val + '</div>' +
-      '<div class="gb">' + (n > 0 && !C.finalizada ? '<button class="btn sec lim" data-a="limpar" title="Limpar seleção" aria-label="Limpar seleção"><span>Limpar</span><span class="lt2"> seleção</span></button>' : '') +
+      '<div class="gb">' + ((reab ? novasSel() : n) > 0 && !C.finalizada ? '<button class="btn sec lim" data-a="limpar" title="Limpar seleção" aria-label="Limpar seleção"><span>Limpar</span><span class="lt2"> seleção</span></button>' : '') +
       '<button class="btn" data-a="finalizar"' + (!n || C.finalizada ? ' disabled' : '') + '>' + (C.finalizada ? 'Seleção enviada' : (C.reaberta ? 'Reenviar seleção' : 'Finalizar seleção')) + '</button></div></div></div>';
   }
 
@@ -1165,16 +1165,16 @@ html{touch-action:manipulation}
   // PF-LIMPAR-V1: o cliente desmarca toda a seleção enquanto ainda está escolhendo (favoritas e comentários não mudam)
   function modalLimpar() {
     if (C.finalizada) { toast('Sua seleção já foi enviada.'); return; }
-    if (!SEL.size) return;
-    var n = SEL.size;
-    abrirModal('<h3>Limpar seleção</h3><p>Isso desmarca ' + (n === 1 ? 'a 1 foto selecionada' : 'as ' + n + ' fotos selecionadas') + '. Suas favoritas e comentários continuam como estão.' + (C.reaberta && ENV.size ? ' Isso inclui as fotos que você já tinha enviado antes.' : '') + '</p>' +
+    var n = C.reaberta ? novasSel() : SEL.size;   // PF-LIMPAR-V2: só as fotos novas desta rodada
+    if (!n) return;
+    abrirModal('<h3>Limpar seleção</h3><p>Isso desmarca ' + (n === 1 ? 'a 1 foto selecionada' : 'as ' + n + ' fotos selecionadas') + '. Suas favoritas e comentários continuam como estão.' + (C.reaberta && ENV.size ? ' As ' + ENV.size + ' fotos que você já enviou antes continuam selecionadas.' : '') + '</p>' +
       '<div class="rowb fix"><button class="btn sec" data-a="mfechar">Voltar</button><button class="btn" data-a="limparok">Limpar seleção</button></div>');
   }
   function limparSelecao() {
     fecharModal();
     if (C.finalizada) { toast('Sua seleção já foi enviada.'); return; }
     if (!SEL.size) return;
-    SEL = new Set();
+    SEL = C.reaberta ? new Set(Array.from(ENV)) : new Set();   // PF-LIMPAR-V2: as já enviadas ficam; só as novas saem
     salvar(); atualizarChrome(); atualizarLightbox();
     if (LBI >= 0) gradePendente = true; else redesenharGrade();
     toast('Seleção limpa.');
