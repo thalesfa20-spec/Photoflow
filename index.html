@@ -974,6 +974,7 @@ html{touch-action:manipulation}
   function pgModo() {
     var m = String(C.pagamentoModo || 'auto').toLowerCase(), ip = !!String(C.infinitePay || '').replace(/\s/g, ''), px = !!String(C.pixChave || '').replace(/\s/g, '');
     if (m === 'chave') return 'chave';
+    if (m === 'pixcartao') return (ip && px) ? 'pixcartao' : (ip ? 'infinitepay' : (px ? 'pix' : 'chave'));   // PF-PIX-CARTAO-V1: QR Pix + botão de cartão
     if (m === 'infinitepay' && ip) return 'infinitepay';
     if (m === 'pix' && px) return 'pix';
     return ip ? 'infinitepay' : (px ? 'pix' : 'chave');
@@ -989,7 +990,9 @@ html{touch-action:manipulation}
     if (modo !== 'chave') {
       h += '<div class="pgq" id="pgq"><div class="ld"><div class="spin"></div>Gerando QR Code…</div></div><div class="pga" id="pga"></div>' +
         '<div class="pgs" id="pgs">' + (modo === 'infinitepay' ? 'Aguardando o pagamento…' : '') + '</div>' +
-        '<div class="pgd">' + (modo === 'infinitepay'
+        '<div class="pgc" id="pgc" style="margin:14px 0;text-align:center"></div><div class="pgd">' + (modo === 'pixcartao'
+          ? 'Pix: abra o app do seu banco, escolha pagar com QR Code e aponte a câmera (ou use o botão Pix copia e cola). Depois de pagar, toque em <b>Confirmar e enviar</b>: o fotógrafo confere o Pix. Prefere cartão? Use o botão <b>Pagar com cartão</b> abaixo do QR Code: a confirmação é automática.'
+          : modo === 'infinitepay'
           ? 'Aponte a câmera do celular para o QR Code (a câmera comum, não o app do banco): abre a página de pagamento da InfinitePay, onde você escolhe Pix ou cartão. No celular, use o botão acima. Quando o pagamento for confirmado, esta tela avisa. Se você enviar a seleção antes de pagar, ela vai com <b>pagamento pendente</b> e o fotógrafo combina com você.'
           : 'Abra o app do seu banco, escolha pagar com QR Code e aponte a câmera. No celular, use o botão acima. Depois de pagar, toque em <b>Confirmar e enviar</b>.') + '</div>';
     } else if (C.pixQr) {
@@ -1009,6 +1012,7 @@ html{touch-action:manipulation}
       var q = document.getElementById('pgq'), a = document.getElementById('pga');
       if (q) q.innerHTML = '<div class="pgx"><b>Tempo esgotado</b><br>O QR Code expirou. Gere um novo para pagar.</div>';
       if (a) a.innerHTML = '<button class="btn" data-a="pgnovo">Gerar novo QR Code</button>';
+      var pc = document.getElementById('pgc'); if (pc) pc.innerHTML = '';   // PF-PIX-CARTAO-V1
       return;
     }
     if (el) { el.textContent = mmss(resta); el.className = 'pgt' + (resta < 60000 ? ' low' : ''); }
@@ -1032,6 +1036,22 @@ html{touch-action:manipulation}
       catch (e) { pgErro('Não consegui gerar o QR Code. Use a chave Pix abaixo.'); return; }
       pgPintar(meu.br, '<button class="btn" data-a="copiabr">Copiar Pix copia e cola</button>');
     }
+    // PF-PIX-CARTAO-V1: QR Pix em cima; embaixo, botão "Pagar com cartão" que abre a InfinitePay (confirmação automática)
+    function cartao() {
+      var c = document.getElementById('pgc'); if (c) c.innerHTML = '<small style="opacity:.7">Preparando o pagamento com cartão…</small>';
+      getJson('/api/galeria/pagamento' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: valor, descricao: titulo(), retorno: urlRetorno() }) })
+        .then(function (r) {
+          if (meu !== PG) return;
+          var u = String((r && r.url) || '');
+          if (!/^https:\/\/([a-z0-9-]+\.)*infinitepay\.(io|com\.br)\//i.test(u)) throw new Error('link');
+          meu.url = u; meu.ref = String((r && r.ref) || '');
+          var c2 = document.getElementById('pgc');
+          if (c2) c2.innerHTML = '<div style="opacity:.7;font-size:13px;margin-bottom:8px">ou pague com cartão</div><a class="btn sec" target="_blank" rel="noopener" href="' + esc(u) + '">Pagar com cartão</a><div class="pgs" style="margin-top:6px">Se pagar no cartão, esta tela avisa quando confirmar.</div>';
+          pgVigiar(meu);
+        })
+        .catch(function () { if (meu !== PG) return; var c3 = document.getElementById('pgc'); if (c3) c3.innerHTML = ''; });
+    }
+    if (modo === 'pixcartao') { viaPix(); cartao(); return; }
     if (modo === 'pix') { viaPix(); return; }
     getJson('/api/galeria/pagamento' + qg(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: valor, descricao: titulo(), retorno: urlRetorno() }) })
       .then(function (r) {
@@ -1065,6 +1085,7 @@ html{touch-action:manipulation}
     var t = document.getElementById('pgt'); if (t) { t.textContent = 'Pago ✓'; t.className = 'pgt'; }
     var q = document.getElementById('pgq'); if (q) q.innerHTML = '<div class="pgok"><b>Pagamento confirmado ✓</b><br>Agora é só tocar em Confirmar e enviar.</div>';
     var a = document.getElementById('pga'); if (a) a.innerHTML = '';
+    var pc = document.getElementById('pgc'); if (pc) pc.innerHTML = '';   // PF-PIX-CARTAO-V1
     var s = document.getElementById('pgs'); if (s) s.textContent = '';
   }
   // pergunta ao script do Google, a cada ~4 s, se a InfinitePay já confirmou este pedido
