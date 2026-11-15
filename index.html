@@ -188,6 +188,15 @@ html{touch-action:manipulation}
 .bar .gv.n strong{font-size:20px}
 .bar .gl .btn{flex:none;background:linear-gradient(135deg,var(--ac),#8b5cf6);border-radius:16px;padding:14px 22px;white-space:nowrap;box-shadow:0 8px 22px rgba(99,102,241,.4),inset 0 1px 0 rgba(255,255,255,.25)}
 .bar .gl .btn:disabled{box-shadow:none}
+/* PF-LIMPAR-V1: botão "Limpar seleção" ao lado de "Finalizar seleção" */
+.bar .gb{display:flex;gap:10px;flex:none;align-items:center}
+.bar .gl .btn.lim{background:var(--card2);color:var(--tx);border:1px solid var(--bd);box-shadow:none;padding:14px 16px}
+@media(max-width:700px){
+  .bar .gb{width:100%}
+  .bar .gl .gb .btn{width:auto;flex:1}
+  .bar .gl .gb .btn.lim{flex:none}
+  .bar .btn.lim .lt2{display:none}
+}
 .grid{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
 @media(max-width:700px){
   .bar .gl{flex-direction:column;align-items:stretch;gap:10px;padding:12px;border-radius:22px}
@@ -576,7 +585,8 @@ html{touch-action:manipulation}
     if (reab) subs.push(novasSel() + ' nova(s) desde o envio');
     return '<div class="bar' + gl + '" id="bar"><div class="gl"><div class="gt"><div class="gr' + rs + '" style="--p:' + pct + '"><b>' + n + '</b></div>' +
       '<div class="gi"><b>' + l1 + '</b><small>' + subs.join(' · ') + '</small></div>' + val + '</div>' +
-      '<button class="btn" data-a="finalizar"' + (!n || C.finalizada ? ' disabled' : '') + '>' + (C.finalizada ? 'Seleção enviada' : (C.reaberta ? 'Reenviar seleção' : 'Finalizar seleção')) + '</button></div></div>';
+      '<div class="gb">' + (n > 0 && !C.finalizada ? '<button class="btn sec lim" data-a="limpar" title="Limpar seleção" aria-label="Limpar seleção"><span>Limpar</span><span class="lt2"> seleção</span></button>' : '') +
+      '<button class="btn" data-a="finalizar"' + (!n || C.finalizada ? ' disabled' : '') + '>' + (C.finalizada ? 'Seleção enviada' : (C.reaberta ? 'Reenviar seleção' : 'Finalizar seleção')) + '</button></div></div></div>';
   }
 
     function cartao(n, i) {
@@ -1024,6 +1034,24 @@ html{touch-action:manipulation}
     if (mostrar && pgModo() !== 'chave') pgIniciar(false);
   }
 
+  // PF-LIMPAR-V1: o cliente desmarca toda a seleção enquanto ainda está escolhendo (favoritas e comentários não mudam)
+  function modalLimpar() {
+    if (C.finalizada) { toast('Sua seleção já foi enviada.'); return; }
+    if (!SEL.size) return;
+    var n = SEL.size;
+    abrirModal('<h3>Limpar seleção</h3><p>Isso desmarca ' + (n === 1 ? 'a 1 foto selecionada' : 'as ' + n + ' fotos selecionadas') + '. Suas favoritas e comentários continuam como estão.' + (C.reaberta && ENV.size ? ' Isso inclui as fotos que você já tinha enviado antes.' : '') + '</p>' +
+      '<div class="rowb fix"><button class="btn sec" data-a="mfechar">Voltar</button><button class="btn" data-a="limparok">Limpar seleção</button></div>');
+  }
+  function limparSelecao() {
+    fecharModal();
+    if (C.finalizada) { toast('Sua seleção já foi enviada.'); return; }
+    if (!SEL.size) return;
+    SEL = new Set();
+    salvar(); atualizarChrome(); atualizarLightbox();
+    if (LBI >= 0) gradePendente = true; else redesenharGrade();
+    toast('Seleção limpa.');
+  }
+
   var finalizando = false;
   function confirmarFinalizacao() {
     if (finalizando) return; finalizando = true;
@@ -1057,6 +1085,8 @@ html{touch-action:manipulation}
     else if (a === 'filtro') { FILTRO = el.getAttribute('data-k'); atualizarChrome(); redesenharGrade(); }
     else if (a === 'pasta') { var kp = el.getAttribute('data-k'); PASTA = kp === '' ? '' : (D.pastas[Number(kp)] || ''); atualizarChrome(); redesenharGrade(); }
     else if (a === 'finalizar') modalFinalizar();
+    else if (a === 'limpar') modalLimpar();
+    else if (a === 'limparok') limparSelecao();
     else if (a === 'confirmar') confirmarFinalizacao();
     else if (a === 'copiapix') copiarTexto(C.pixChave || '', 'Chave Pix copiada.');
     else if (a === 'copiabr') copiarTexto(PG.br || '', 'Código Pix copiado. Cole no app do seu banco.');
